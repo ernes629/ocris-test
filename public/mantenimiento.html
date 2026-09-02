@@ -1,0 +1,2059 @@
+<!DOCTYPE html> <html lang="es"> <head>
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0">
+
+<title>OCRIS - Mantenimiento</title>
+
+<style>
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        font-family: Arial, sans-serif;
+        background: #f3f6f9;
+        color: #1f2937;
+    }
+
+    header {
+        background: #0b3d62;
+        color: white;
+        padding: 22px;
+    }
+
+    header h1 {
+        font-size: 28px;
+    }
+
+    header p {
+        margin-top: 5px;
+        color: #dbeafe;
+    }
+
+    .usuario {
+        margin-top: 10px;
+        color: #bfdbfe;
+        font-size: 14px;
+    }
+
+    .container {
+        max-width: 1000px;
+        margin: 30px auto;
+        padding: 20px;
+    }
+
+    .formulario {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+
+        box-shadow:
+            0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    h2 {
+        color: #0b3d62;
+        margin-bottom: 20px;
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .campo {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .campo-completo {
+        grid-column: 1 / -1;
+    }
+
+    label {
+        font-weight: bold;
+        margin-bottom: 7px;
+    }
+
+    input,
+    select,
+    textarea {
+        padding: 11px;
+
+        border:
+            1px solid #cbd5e1;
+
+        border-radius: 6px;
+
+        font-size: 15px;
+
+        background: white;
+    }
+
+    textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+        outline: none;
+        border-color: #0b3d62;
+        box-shadow:
+            0 0 0 2px rgba(11,61,98,0.10);
+    }
+
+    .informacion-equipo {
+        grid-column: 1 / -1;
+
+        background: #eff6ff;
+
+        border-left:
+            4px solid #0b3d62;
+
+        padding: 15px;
+
+        border-radius: 6px;
+
+        display: none;
+    }
+
+    .informacion-equipo strong {
+        color: #0b3d62;
+    }
+
+    .datos-equipo-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px 20px;
+        margin-top: 10px;
+    }
+
+    .dato-equipo {
+        padding: 5px 0;
+    }
+
+    .usuario-box {
+        grid-column: 1 / -1;
+
+        background: #ecfdf5;
+
+        border-left:
+            4px solid #15803d;
+
+        padding: 15px;
+
+        border-radius: 6px;
+    }
+
+    .usuario-box strong {
+        color: #166534;
+    }
+
+    /* =====================================
+       PENDIENTE
+    ===================================== */
+
+    .pendiente-box {
+
+        grid-column: 1 / -1;
+
+        background: #fff7ed;
+
+        border-left:
+            5px solid #f97316;
+
+        padding: 18px;
+
+        border-radius: 8px;
+    }
+
+    .pendiente-titulo {
+
+        font-size: 17px;
+
+        font-weight: bold;
+
+        color: #9a3412;
+
+        margin-bottom: 12px;
+    }
+
+    .opciones-pendiente {
+
+        display: flex;
+
+        gap: 12px;
+
+        flex-wrap: wrap;
+    }
+
+    .opcion-pendiente {
+
+        flex: 1;
+
+        min-width: 180px;
+
+        border:
+            2px solid #cbd5e1;
+
+        border-radius: 8px;
+
+        padding: 14px;
+
+        cursor: pointer;
+
+        background: white;
+
+        text-align: center;
+
+        font-weight: bold;
+    }
+
+    .opcion-pendiente:hover {
+
+        border-color:
+            #0b3d62;
+    }
+
+    .opcion-pendiente input {
+
+        width: auto;
+
+        margin-right: 8px;
+    }
+
+    .opcion-si {
+
+        color: #b91c1c;
+    }
+
+    .opcion-no {
+
+        color: #166534;
+    }
+
+    #campoPendiente {
+
+        margin-top: 15px;
+
+        display: none;
+    }
+
+    #campoPendiente textarea {
+
+        border-color:
+            #dc2626;
+
+        background:
+            #fff7f7;
+    }
+
+    /* =====================================
+       GPS
+    ===================================== */
+
+    .gps-box {
+
+        grid-column: 1 / -1;
+
+        background: #f0fdf4;
+
+        border-left:
+            5px solid #15803d;
+
+        padding: 18px;
+
+        border-radius: 8px;
+    }
+
+    .gps-titulo {
+
+        font-weight: bold;
+
+        color: #166534;
+
+        margin-bottom: 10px;
+
+        font-size: 17px;
+    }
+
+    .gps-datos {
+
+        background: white;
+
+        border:
+            1px solid #bbf7d0;
+
+        padding: 12px;
+
+        border-radius: 6px;
+
+        margin-top: 10px;
+
+        display: none;
+    }
+
+    .gps-ok {
+
+        color: #166534;
+
+        font-weight: bold;
+    }
+
+    .gps-error {
+
+        color: #b91c1c;
+
+        font-weight: bold;
+    }
+
+    .btn-gps {
+
+        background: #15803d;
+    }
+
+    .btn-gps:hover {
+
+        background: #166534;
+    }
+
+    /* =====================================
+       FOTOGRAFÍAS
+    ===================================== */
+
+    .fotos-box {
+
+        grid-column: 1 / -1;
+
+        background: #f8fafc;
+
+        border-left:
+            5px solid #0b3d62;
+
+        padding: 18px;
+
+        border-radius: 8px;
+    }
+
+    .fotos-titulo {
+
+        font-weight: bold;
+
+        color: #0b3d62;
+
+        margin-bottom: 10px;
+
+        font-size: 17px;
+    }
+
+    .foto-input {
+
+        width: 100%;
+
+        padding: 12px;
+
+        border:
+            1px dashed #94a3b8;
+
+        border-radius: 7px;
+
+        background: white;
+    }
+
+    .galeria {
+
+        display: grid;
+
+        grid-template-columns:
+            repeat(auto-fill, minmax(130px, 1fr));
+
+        gap: 12px;
+
+        margin-top: 15px;
+    }
+
+    .foto-preview {
+
+        position: relative;
+
+        border-radius: 8px;
+
+        overflow: hidden;
+
+        background: #e2e8f0;
+
+        aspect-ratio: 1 / 1;
+    }
+
+    .foto-preview img {
+
+        width: 100%;
+
+        height: 100%;
+
+        object-fit: cover;
+    }
+
+    .contador-fotos {
+
+        margin-top: 8px;
+
+        color: #64748b;
+
+        font-size: 13px;
+    }
+
+    .aviso-fotos {
+
+        margin-top: 8px;
+
+        color: #64748b;
+
+        font-size: 13px;
+    }
+
+    /* =====================================
+       BOTONES
+    ===================================== */
+
+    .botones {
+
+        margin-top: 25px;
+
+        display: flex;
+
+        gap: 10px;
+
+        flex-wrap: wrap;
+    }
+
+    button {
+
+        background: #0b3d62;
+
+        color: white;
+
+        border: none;
+
+        padding: 12px 22px;
+
+        border-radius: 6px;
+
+        cursor: pointer;
+
+        font-size: 15px;
+
+        font-weight: bold;
+    }
+
+    button:hover {
+
+        background: #075985;
+    }
+
+    button:disabled {
+
+        opacity: 0.65;
+
+        cursor: not-allowed;
+    }
+
+    .volver {
+
+        background: #64748b;
+    }
+
+    .volver:hover {
+
+        background: #475569;
+    }
+
+    .guardar {
+
+        background: #0b3d62;
+    }
+
+    .cargando {
+
+        color: #64748b;
+
+        font-size: 14px;
+
+        margin-top: 5px;
+    }
+
+    small {
+
+        color: #64748b;
+
+        margin-top: 6px;
+    }
+
+    .estado-guardado {
+
+        display: none;
+
+        margin-top: 20px;
+
+        padding: 15px;
+
+        border-radius: 7px;
+
+        background: #dcfce7;
+
+        color: #166534;
+
+        font-weight: bold;
+
+        text-align: center;
+    }
+
+    .error-formulario {
+
+        display: none;
+
+        margin-top: 20px;
+
+        padding: 15px;
+
+        border-radius: 7px;
+
+        background: #fee2e2;
+
+        color: #991b1b;
+
+        font-weight: bold;
+
+        text-align: center;
+    }
+
+    @media (max-width: 700px) {
+
+        .grid {
+
+            grid-template-columns: 1fr;
+
+        }
+
+        .campo-completo {
+
+            grid-column: auto;
+
+        }
+
+        .informacion-equipo,
+        .usuario-box,
+        .pendiente-box,
+        .gps-box,
+        .fotos-box {
+
+            grid-column: auto;
+
+        }
+
+        .datos-equipo-grid {
+
+            grid-template-columns: 1fr;
+
+        }
+
+        .container {
+
+            margin: 10px auto;
+
+            padding: 10px;
+
+        }
+
+        .formulario {
+
+            padding: 20px;
+
+        }
+
+        header h1 {
+
+            font-size: 24px;
+
+        }
+
+        .opciones-pendiente {
+
+            flex-direction: column;
+
+        }
+
+    }
+
+</style>
+
+</head> <body> <header>
+<h1>OCRIS</h1>
+
+<p>
+    Registro de Mantenimiento de Redes de Media Tensión
+</p>
+
+<div
+    id="usuarioActual"
+    class="usuario">
+
+    👤 Cargando usuario...
+
+</div>
+
+</header> <main class="container"> <div class="formulario">
+<h2>
+    🔧 Registrar mantenimiento
+</h2>
+
+<form
+    id="formMantenimiento"
+    enctype="multipart/form-data">
+
+    <div class="grid">
+
+        <!-- ==================================
+             USUARIO
+        =================================== -->
+
+        <div class="usuario-box">
+
+            👤
+
+            <strong>
+                Realizado por:
+            </strong>
+
+            <span id="nombreUsuario">
+                Cargando...
+            </span>
+
+            <br>
+
+            <small>
+                El usuario se registra automáticamente
+                con este mantenimiento.
+            </small>
+
+        </div>
+
+        <!-- ==================================
+             FECHA
+        =================================== -->
+
+        <div class="campo">
+
+            <label for="fecha">
+                Fecha
+            </label>
+
+            <input
+                type="date"
+                name="fecha"
+                id="fecha"
+                required>
+
+        </div>
+
+        <!-- ==================================
+             EQUIPO
+        =================================== -->
+
+        <div class="campo">
+
+            <label for="equipo">
+                Código de equipo
+            </label>
+
+            <select
+                id="equipo"
+                name="estructura"
+                required>
+
+                <option value="">
+                    Cargando equipos...
+                </option>
+
+            </select>
+
+            <span
+                id="mensajeEquipos"
+                class="cargando">
+            </span>
+
+        </div>
+
+        <!-- ==================================
+             INFORMACIÓN EQUIPO
+        =================================== -->
+
+        <div
+            id="informacionEquipo"
+            class="informacion-equipo">
+
+            <strong>
+                Información del equipo
+            </strong>
+
+            <div
+                id="datosEquipo"
+                class="datos-equipo-grid">
+            </div>
+
+        </div>
+
+        <!-- ==================================
+             UBICACIÓN
+        =================================== -->
+
+        <div class="campo">
+
+            <label for="ubicacion">
+                Ubicación
+            </label>
+
+            <input
+                type="text"
+                id="ubicacion"
+                name="ubicacion"
+                placeholder="Sector / dirección">
+
+        </div>
+
+        <!-- ==================================
+             TIPO
+        =================================== -->
+
+        <div class="campo">
+
+            <label for="tipoMantenimiento">
+                Tipo de mantenimiento
+            </label>
+
+            <select
+                name="tipo_mantenimiento"
+                id="tipoMantenimiento"
+                required>
+
+                <option value="">
+                    Seleccione...
+                </option>
+
+                <option value="Preventivo">
+                    Preventivo
+                </option>
+
+                <option value="Correctivo">
+                    Correctivo
+                </option>
+
+                <option value="Inspección">
+                    Inspección
+                </option>
+
+                <option value="Emergencia">
+                    Emergencia
+                </option>
+
+            </select>
+
+        </div>
+
+        <!-- ==================================
+             ELEMENTO
+        =================================== -->
+
+        <div class="campo">
+
+            <label for="elemento">
+                Elemento intervenido
+            </label>
+
+            <select
+                name="elemento"
+                id="elemento"
+                required>
+
+                <option value="">Seleccione...</option>
+                <option value="Equipo">Equipo</option>
+                <option value="Conductor">Conductor</option>
+                <option value="Aisladores">Aisladores</option>
+                <option value="Seccionador">Seccionador</option>
+                <option value="Puesta a tierra">Puesta a tierra</option>
+                <option value="Conexiones">Conexiones</option>
+                <option value="Control">Control</option>
+                <option value="Batería">Batería</option>
+                <option value="Fuente de Alimentación">Fuente de Alimentación</option>
+                <option value="SF6">SF6</option>
+                <option value="Aceite">Aceite</option>
+                <option value="Soporte a poste">Soporte a poste</option>
+                <option value="Crucetas">Crucetas</option>
+                <option value="Pararrayos">Pararrayos</option>
+                <option value="Cuchillas">Cuchillas</option>
+                <option value="Otro">Otro</option>
+
+            </select>
+
+        </div>
+
+        <!-- ==================================
+             DESCRIPCIÓN
+        =================================== -->
+
+        <div class="campo campo-completo">
+
+            <label for="descripcion">
+                Descripción del trabajo realizado
+            </label>
+
+            <textarea
+                name="descripcion"
+                id="descripcion"
+                placeholder="Describa el trabajo realizado..."
+                required></textarea>
+
+        </div>
+
+        <!-- ==================================
+             PENDIENTE
+        =================================== -->
+
+        <div class="pendiente-box">
+
+            <div class="pendiente-titulo">
+
+                ⚠️ ¿Quedó algún pendiente?
+
+            </div>
+
+            <div class="opciones-pendiente">
+
+                <label
+                    class="opcion-pendiente opcion-no">
+
+                    <input
+                        type="radio"
+                        name="tiene_pendiente"
+                        value="NO"
+                        checked>
+
+                    ✅ No, mantenimiento completo
+
+                </label>
+
+                <label
+                    class="opcion-pendiente opcion-si">
+
+                    <input
+                        type="radio"
+                        name="tiene_pendiente"
+                        value="SI">
+
+                    ⚠️ Sí, quedó pendiente
+
+                </label>
+
+            </div>
+
+            <div
+                id="campoPendiente">
+
+                <label for="pendiente">
+                    Describa el pendiente
+                </label>
+
+                <textarea
+                    id="pendiente"
+                    name="pendiente"
+                    placeholder="Indique exactamente qué trabajo quedó pendiente, materiales faltantes, reparación pendiente, etc."></textarea>
+
+                <small>
+                    Este mantenimiento quedará marcado
+                    como pendiente en el historial.
+                </small>
+
+            </div>
+
+        </div>
+
+        <!-- ==================================
+             OBSERVACIONES
+        =================================== -->
+
+        <div class="campo campo-completo">
+
+            <label for="observaciones">
+                Observaciones
+            </label>
+
+            <textarea
+                name="observaciones"
+                id="observaciones"
+                placeholder="Observaciones, daños encontrados, recomendaciones..."></textarea>
+
+        </div>
+
+        <!-- ==================================
+             GPS
+        =================================== -->
+
+        <div class="gps-box">
+
+            <div class="gps-titulo">
+                📍 Ubicación geográfica
+            </div>
+
+            <p id="textoGpsDescriptivo">
+                Obteniendo ubicación automáticamente...
+            </p>
+
+            <div id="estadoGPS" class="gps-datos" style="display: block;">
+                Buscando señal GPS...
+            </div>
+
+            <!-- Campos manuales (ocultos por defecto, se muestran si falla el automático) -->
+            <div id="camposGpsManuales" style="display: none; margin-top: 15px;">
+                <div class="grid">
+                    <div class="campo">
+                        <label for="latitud">Latitud</label>
+                        <input type="text" name="latitud" id="latitud" placeholder="Ej: -17.75876" readonly>
+                    </div>
+                    <div class="campo">
+                        <label for="longitud">Longitud</label>
+                        <input type="text" name="longitud" id="longitud" placeholder="Ej: -63.106976" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <button
+                type="button"
+                class="btn-gps"
+                id="btnManual"
+                style="display: none; margin-top: 15px;"
+                onclick="habilitarModoManual()">
+                ✍️ Ingresar coordenadas manualmente
+            </button>
+
+        </div>
+
+        <!-- ==================================
+             FOTOGRAFÍAS
+        =================================== -->
+
+        <div class="fotos-box">
+
+            <div class="fotos-titulo">
+
+                📷 Fotografías / evidencias
+
+            </div>
+
+            <p>
+                Puede tomar fotografías directamente
+                con la cámara del celular o seleccionar
+                imágenes existentes.
+            </p>
+
+            <br>
+
+            <!-- IMPORTANTE:
+                 index.js espera "fotografias"
+            -->
+
+            <input
+                type="file"
+                id="fotografias"
+                name="fotografias"
+                class="foto-input"
+                accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif"
+                capture="environment"
+                multiple>
+
+            <div
+                id="contadorFotos"
+                class="contador-fotos">
+
+                No se han seleccionado fotografías.
+
+            </div>
+
+            <div
+                class="aviso-fotos">
+
+                Máximo 10 fotografías.
+                Tamaño máximo: 10 MB por fotografía.
+
+            </div>
+
+            <div
+                id="galeria"
+                class="galeria">
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ==================================
+         BOTONES
+    =================================== -->
+
+    <div class="botones">
+
+        <button
+            type="submit"
+            class="guardar"
+            id="btnGuardar">
+
+            💾 Guardar mantenimiento
+
+        </button>
+
+        <button
+            type="button"
+            class="volver"
+            onclick="window.location.href='index.html'">
+
+            ← Volver
+
+        </button>
+
+    </div>
+
+    <div
+        id="estadoGuardado"
+        class="estado-guardado">
+    </div>
+
+    <div
+        id="errorFormulario"
+        class="error-formulario">
+    </div>
+
+</form>
+
+</div> </main> <script>
+// ==========================================
+// FECHA ACTUAL
+// ==========================================
+
+document
+.getElementById("fecha")
+.value =
+new Date()
+.toISOString()
+.split("T")[0];
+
+// ==========================================
+// CARGAR USUARIO
+// ==========================================
+
+async function cargarUsuario() {
+
+try {
+
+    const respuesta =
+        await fetch(
+            "/api/usuario"
+        );
+
+    if (!respuesta.ok) {
+
+        window.location.href =
+            "/login.html";
+
+        return;
+
+    }
+
+    const resultado =
+        await respuesta.json();
+
+    if (
+        !resultado.ok ||
+        !resultado.usuario
+    ) {
+
+        window.location.href =
+            "/login.html";
+
+        return;
+
+    }
+
+    document
+        .getElementById(
+            "nombreUsuario"
+        )
+        .textContent =
+        `${resultado.usuario.nombre} (${resultado.usuario.usuario})`;
+
+    document
+        .getElementById(
+            "usuarioActual"
+        )
+        .textContent =
+        `👤 Usuario: ${resultado.usuario.nombre}`;
+
+} catch (error) {
+
+    console.error(
+        "Error cargando usuario:",
+        error
+    );
+
+    window.location.href =
+        "/login.html";
+
+}
+
+}
+
+// ==========================================
+// CARGAR EQUIPOS
+// ==========================================
+
+async function cargarEquipos() {
+
+const selector =
+    document.getElementById(
+        "equipo"
+    );
+
+const mensaje =
+    document.getElementById(
+        "mensajeEquipos"
+    );
+
+try {
+
+    const respuesta =
+        await fetch(
+            "/api/estructuras"
+        );
+
+    if (!respuesta.ok) {
+
+        throw new Error(
+            "No se pudieron cargar los equipos"
+        );
+
+    }
+
+    const equipos =
+        await respuesta.json();
+
+    selector.innerHTML = `
+
+        <option value="">
+            Seleccione un equipo...
+        </option>
+
+    `;
+
+    if (
+        !Array.isArray(equipos) ||
+        equipos.length === 0
+    ) {
+
+        selector.innerHTML = `
+
+            <option value="">
+                No hay equipos registrados
+            </option>
+
+        `;
+
+        mensaje.textContent =
+            "Primero registre un equipo.";
+
+        return;
+
+    }
+
+    mensaje.textContent =
+        `${equipos.length} equipo(s) disponible(s)`;
+
+    equipos.forEach(
+        equipo => {
+
+            const opcion =
+                document.createElement(
+                    "option"
+                );
+
+            opcion.value =
+                equipo.codigo;
+
+            opcion.textContent =
+                `${equipo.codigo} - ${equipo.tipo}`;
+
+            opcion.dataset.tipo =
+                equipo.tipo || "";
+
+            opcion.dataset.ubicacion =
+                equipo.ubicacion || "";
+
+            opcion.dataset.estado =
+                equipo.estado || "";
+
+            opcion.dataset.marca =
+                equipo.marca || "";
+
+            opcion.dataset.modelo =
+                equipo.modelo || "";
+
+            opcion.dataset.numeroSerie =
+                equipo.numero_serie || "";
+
+            opcion.dataset.fechaInstalacion =
+                equipo.fecha_instalacion || "";
+
+            opcion.dataset.latitud =
+                equipo.latitud || "";
+
+            opcion.dataset.longitud =
+                equipo.longitud || "";
+
+            selector.appendChild(
+                opcion
+            );
+
+        }
+    );
+
+} catch (error) {
+
+    console.error(
+        "Error cargando equipos:",
+        error
+    );
+
+    selector.innerHTML = `
+
+        <option value="">
+            Error al cargar equipos
+        </option>
+
+    `;
+
+    mensaje.textContent =
+        "❌ No se pudieron cargar los equipos.";
+
+}
+
+}
+
+// ==========================================
+// INFORMACIÓN DEL EQUIPO
+// ==========================================
+
+document
+.getElementById("equipo")
+.addEventListener(
+"change",
+function() {
+
+        const opcion =
+            this.options[
+                this.selectedIndex
+            ];
+
+        const panel =
+            document.getElementById(
+                "informacionEquipo"
+            );
+
+        const datos =
+            document.getElementById(
+                "datosEquipo"
+            );
+
+        const ubicacion =
+            document.getElementById(
+                "ubicacion"
+            );
+
+        if (
+            !this.value
+        ) {
+
+            panel.style.display =
+                "none";
+
+            datos.innerHTML =
+                "";
+
+            return;
+
+        }
+
+        panel.style.display =
+            "block";
+
+        datos.innerHTML = `
+
+            <div class="dato-equipo">
+                <strong>Código:</strong>
+                ${escapar(opcion.value)}
+            </div>
+
+            <div class="dato-equipo">
+                <strong>Tipo:</strong>
+                ${escapar(
+                    opcion.dataset.tipo ||
+                    "No registrado"
+                )}
+            </div>
+
+            <div class="dato-equipo">
+                <strong>Marca:</strong>
+                ${escapar(
+                    opcion.dataset.marca ||
+                    "No registrada"
+                )}
+            </div>
+
+            <div class="dato-equipo">
+                <strong>Modelo:</strong>
+                ${escapar(
+                    opcion.dataset.modelo ||
+                    "No registrado"
+                )}
+            </div>
+
+            <div class="dato-equipo">
+                <strong>N.º de serie:</strong>
+                ${escapar(
+                    opcion.dataset.numeroSerie ||
+                    "No registrado"
+                )}
+            </div>
+
+            <div class="dato-equipo">
+                <strong>Estado:</strong>
+                ${escapar(
+                    opcion.dataset.estado ||
+                    "No registrado"
+                )}
+            </div>
+
+            <div class="dato-equipo">
+                <strong>Ubicación:</strong>
+                ${escapar(
+                    opcion.dataset.ubicacion ||
+                    "No registrada"
+                )}
+            </div>
+
+            <div class="dato-equipo">
+                <strong>Instalación:</strong>
+                ${escapar(
+                    opcion.dataset.fechaInstalacion ||
+                    "No registrada"
+                )}
+            </div>
+
+        `;
+
+        if (
+            opcion.dataset.ubicacion
+        ) {
+
+            ubicacion.value =
+                opcion.dataset.ubicacion;
+
+        }
+
+    }
+);
+
+// ==========================================
+// MOSTRAR / OCULTAR PENDIENTE
+// ==========================================
+
+document
+.querySelectorAll(
+'input[name="tiene_pendiente"]'
+)
+.forEach(
+radio => {
+
+        radio.addEventListener(
+            "change",
+            controlarPendiente
+        );
+
+    }
+);
+
+function controlarPendiente() {
+
+const seleccionado =
+    document.querySelector(
+        'input[name="tiene_pendiente"]:checked'
+    );
+
+const campo =
+    document.getElementById(
+        "campoPendiente"
+    );
+
+const textarea =
+    document.getElementById(
+        "pendiente"
+    );
+
+if (
+    seleccionado &&
+    seleccionado.value === "SI"
+) {
+
+    campo.style.display =
+        "block";
+
+    textarea.required =
+        true;
+
+} else {
+
+    campo.style.display =
+        "none";
+
+    textarea.required =
+        false;
+
+    textarea.value =
+        "";
+
+}
+
+}
+
+// ==========================================
+// GPS AUTOMÁTICO
+// ==========================================
+
+document.addEventListener("DOMContentLoaded", function() {
+    iniciarGpsAutomatico();
+});
+
+function iniciarGpsAutomatico() {
+    const estado = document.getElementById("estadoGPS");
+    const btnManual = document.getElementById("btnManual");
+    const latitudInput = document.getElementById("latitud");
+    const longitudInput = document.getElementById("longitud");
+    const camposManuales = document.getElementById("camposGpsManuales");
+
+    if (!navigator.geolocation) {
+        estado.innerHTML = '<span class="gps-error">❌ Este dispositivo no soporta geolocalización.</span>';
+        btnManual.style.display = "inline-block";
+        camposManuales.style.display = "block";
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        function(posicion) {
+            const lat = posicion.coords.latitude;
+            const lon = posicion.coords.longitude;
+
+            latitudInput.value = lat;
+            longitudInput.value = lon;
+
+            estado.innerHTML = `
+                <span class="gps-ok">✅ Ubicación satelital obtenida con éxito</span>
+                <br><br>
+                <a href="https://www.google.com/maps?q=${encodeURIComponent(lat)},${encodeURIComponent(lon)}" target="_blank">🗺️ Ver en Maps</a>
+            `;
+            camposManuales.style.display = "block";
+            btnManual.style.display = "inline-block";
+        },
+        function(error) {
+            console.warn("Error GPS:", error);
+            let mensaje = "No se pudo obtener la ubicación.";
+            if (error.code === 1) mensaje = "Permiso de ubicación denegado.";
+            else if (error.code === 2) mensaje = "No se pudo determinar la ubicación.";
+            else if (error.code === 3) mensaje = "Se agotó el tiempo para obtener la ubicación.";
+
+            estado.innerHTML = `
+                <span class="gps-error">❌ ${mensaje}</span>
+                <br><br>
+                Por favor, ingrese las coordenadas manualmente.
+            `;
+            camposManuales.style.display = "block";
+            btnManual.style.display = "inline-block";
+            habilitarModoManual(); 
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 0
+        }
+    );
+}
+
+function habilitarModoManual() {
+    document.getElementById("latitud").removeAttribute("readonly");
+    document.getElementById("longitud").removeAttribute("readonly");
+    document.getElementById("btnManual").style.display = "none";
+    document.getElementById("estadoGPS").innerHTML = `
+        <span style="color: #0b3d62; font-weight: bold;">
+            ✍️ Modo de ingreso manual activado. Puede editar las coordenadas.
+        </span>
+    `;
+}
+
+// ==========================================
+// FOTOGRAFÍAS
+// ==========================================
+
+document
+.getElementById("fotografias")
+.addEventListener(
+"change",
+mostrarFotos
+);
+
+function mostrarFotos(evento) {
+
+const archivos =
+    Array.from(
+        evento.target.files || []
+    );
+
+const galeria =
+    document.getElementById(
+        "galeria"
+    );
+
+const contador =
+    document.getElementById(
+        "contadorFotos"
+    );
+
+galeria.innerHTML =
+    "";
+
+if (
+    archivos.length === 0
+) {
+
+    contador.textContent =
+        "No se han seleccionado fotografías.";
+
+    return;
+
+}
+
+if (
+    archivos.length > 10
+) {
+
+    alert(
+        "Solo se permiten 10 fotografías como máximo."
+    );
+
+    evento.target.value =
+        "";
+
+    contador.textContent =
+        "No se han seleccionado fotografías.";
+
+    return;
+
+}
+
+const archivosInvalidos =
+    archivos.filter(
+        archivo =>
+            !archivo.type.startsWith(
+                "image/"
+            )
+    );
+
+if (
+    archivosInvalidos.length > 0
+) {
+
+    alert(
+        "Una o más fotografías no son archivos de imagen válidos."
+    );
+
+    evento.target.value =
+        "";
+
+    contador.textContent =
+        "No se han seleccionado fotografías.";
+
+    return;
+
+}
+
+const archivosGrandes =
+    archivos.filter(
+        archivo =>
+            archivo.size >
+            10 * 1024 * 1024
+    );
+
+if (
+    archivosGrandes.length > 0
+) {
+
+    alert(
+        "Una o más fotografías superan el límite de 10 MB."
+    );
+
+    evento.target.value =
+        "";
+
+    contador.textContent =
+        "No se han seleccionado fotografías.";
+
+    return;
+
+}
+
+contador.textContent =
+    `${archivos.length} fotografía(s) seleccionada(s)`;
+
+archivos.forEach(
+    archivo => {
+
+        const reader =
+            new FileReader();
+
+        reader.onload =
+            function(e) {
+
+                const contenedor =
+                    document.createElement(
+                        "div"
+                    );
+
+                contenedor.className =
+                    "foto-preview";
+
+                const imagen =
+                    document.createElement(
+                        "img"
+                    );
+
+                imagen.src =
+                    e.target.result;
+
+                imagen.alt =
+                    "Vista previa de fotografía";
+
+                contenedor.appendChild(
+                    imagen
+                );
+
+                galeria.appendChild(
+                    contenedor
+                );
+
+            };
+
+        reader.readAsDataURL(
+            archivo
+        );
+
+    }
+);
+
+}
+
+// ==========================================
+// GUARDAR MANTENIMIENTO
+// ==========================================
+
+document
+.getElementById(
+"formMantenimiento"
+)
+.addEventListener(
+"submit",
+async function(evento) {
+
+        evento.preventDefault();
+
+        const formulario =
+            this;
+
+        const btnGuardar =
+            document.getElementById(
+                "btnGuardar"
+            );
+
+        const estadoGuardado =
+            document.getElementById(
+                "estadoGuardado"
+            );
+
+        const errorFormulario =
+            document.getElementById(
+                "errorFormulario"
+            );
+
+        estadoGuardado.style.display =
+            "none";
+
+        errorFormulario.style.display =
+            "none";
+
+        const tienePendiente =
+            document.querySelector(
+                'input[name="tiene_pendiente"]:checked'
+            )?.value || "NO";
+
+        const pendiente =
+            document
+                .getElementById(
+                    "pendiente"
+                )
+                .value
+                .trim();
+
+        if (
+            tienePendiente === "SI" &&
+            !pendiente
+        ) {
+
+            alert(
+                "Debe describir el pendiente."
+            );
+
+            document
+                .getElementById(
+                    "pendiente"
+                )
+                .focus();
+
+            return;
+
+        }
+
+        if (
+            !formulario.checkValidity()
+        ) {
+
+            formulario.reportValidity();
+
+            return;
+
+        }
+
+        btnGuardar.disabled =
+            true;
+
+        btnGuardar.textContent =
+            "💾 Guardando...";
+
+        try {
+
+            /*
+            =================================
+            IMPORTANTE
+
+            FormData envía:
+
+            - Datos del mantenimiento
+            - GPS
+            - Fotografías
+
+            El nombre del campo de fotografías
+            es "fotografias", igual que espera
+            index.js:
+
+            subirFotos.array("fotografias", 10)
+            =================================
+            */
+
+            const datos =
+                new FormData(
+                    formulario
+                );
+
+            const respuesta =
+                await fetch(
+                    "/api/mantenimientos",
+                    {
+
+                        method:
+                            "POST",
+
+                        body:
+                            datos
+
+                    }
+                );
+
+            let resultado;
+
+            try {
+
+                resultado =
+                    await respuesta.json();
+
+            } catch (error) {
+
+                throw new Error(
+                    "El servidor devolvió una respuesta no válida."
+                );
+
+            }
+
+            if (
+                !respuesta.ok
+            ) {
+
+                throw new Error(
+                    resultado.mensaje ||
+                    "No se pudo guardar el mantenimiento."
+                );
+
+            }
+
+            if (
+                resultado.ok
+            ) {
+
+                estadoGuardado.style.display =
+                    "block";
+
+                estadoGuardado.innerHTML = `
+
+                    ✅ Mantenimiento guardado correctamente.
+
+                    <br><br>
+
+                    <strong>
+                        ID del mantenimiento:
+                        ${escapar(resultado.id)}
+                    </strong>
+
+                    <br><br>
+
+                    📷 Fotografías guardadas:
+                    ${escapar(resultado.fotos || 0)}
+
+                    <br><br>
+
+                    ${
+                        resultado.pendiente
+
+                        ?
+
+                        `
+                        ⚠️ El mantenimiento
+                        quedó registrado
+                        CON PENDIENTE.
+                        `
+
+                        :
+
+                        `
+                        ✅ Mantenimiento
+                        registrado como
+                        COMPLETO.
+                        `
+                    }
+
+                    <br><br>
+
+                    <button
+                        type="button"
+                        onclick="abrirPDF(${Number(resultado.id)})">
+
+                        📄 Ver informe PDF
+
+                    </button>
+
+                `;
+
+                alert(
+                    "✅ Mantenimiento guardado correctamente."
+                );
+
+                formulario.reset();
+
+                document
+                    .getElementById(
+                        "fecha"
+                    )
+                    .value =
+                    new Date()
+                        .toISOString()
+                        .split("T")[0];
+
+                document
+                    .getElementById(
+                        "informacionEquipo"
+                    )
+                    .style.display =
+                    "none";
+
+                document
+                    .getElementById(
+                        "campoPendiente"
+                    )
+                    .style.display =
+                    "none";
+
+                document
+                    .getElementById(
+                        "galeria"
+                    )
+                    .innerHTML =
+                    "";
+
+                document
+                    .getElementById(
+                        "contadorFotos"
+                    )
+                    .textContent =
+                    "No se han seleccionado fotografías.";
+
+                document.getElementById("estadoGPS").style.display = "block";
+                document.getElementById("estadoGPS").innerHTML = "Buscando señal GPS...";
+                document.getElementById("latitud").value = "";
+                document.getElementById("longitud").value = "";
+                iniciarGpsAutomatico();
+
+                document
+                    .getElementById(
+                        "pendiente"
+                    )
+                    .required =
+                    false;
+
+            } else {
+
+                throw new Error(
+                    resultado.mensaje ||
+                    "No se pudo guardar el mantenimiento."
+                );
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                "Error guardando mantenimiento:",
+                error
+            );
+
+            errorFormulario.style.display =
+                "block";
+
+            errorFormulario.textContent =
+                `❌ ${error.message || "Error de conexión con OCRIS."}`;
+
+            alert(
+                "❌ " +
+                (
+                    error.message ||
+                    "Error de conexión con OCRIS."
+                )
+            );
+
+        } finally {
+
+            btnGuardar.disabled =
+                false;
+
+            btnGuardar.textContent =
+                "💾 Guardar mantenimiento";
+
+        }
+
+    }
+);
+
+// ==========================================
+// ABRIR PDF
+// ==========================================
+
+function abrirPDF(id) {
+
+if (
+    !id
+) {
+
+    return;
+
+}
+
+window.open(
+    `/api/mantenimientos/${encodeURIComponent(id)}/pdf`,
+    "_blank"
+);
+
+}
+
+// ==========================================
+// ESCAPAR HTML
+// ==========================================
+
+function escapar(valor) {
+
+if (
+    valor === null ||
+    valor === undefined
+) {
+
+    return "";
+
+}
+
+return String(valor)
+
+    .replaceAll(
+        "&",
+        "&amp;"
+    )
+
+    .replaceAll(
+        "<",
+        "&lt;"
+    )
+
+    .replaceAll(
+        ">",
+        "&gt;"
+    )
+
+    .replaceAll(
+        '"',
+        "&quot;"
+    )
+
+    .replaceAll(
+        "'",
+        "&#039;"
+    );
+
+}
+
+// ==========================================
+// INICIAR
+// ==========================================
+
+cargarUsuario();
+
+cargarEquipos();
+
+controlarPendiente();
+
+</script> </body> </html>

@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCRIS - Historial</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f3f6f9;
+            color: #1f2937;
+        }
+
+        header {
+            background: #0b3d62;
+            color: white;
+            padding: 22px;
+        }
+
+        header h1 {
+            font-size: 28px;
+        }
+
+        header p {
+            margin-top: 5px;
+            color: #dbeafe;
+        }
+
+        .container {
+            max-width: 1500px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .panel {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        h2 {
+            color: #0b3d62;
+            margin-bottom: 20px;
+        }
+
+        .acciones {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .buscar {
+            flex: 1;
+            min-width: 250px;
+            padding: 11px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+
+        .filtro {
+            padding: 11px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 15px;
+            background: white;
+        }
+
+        button {
+            background: #0b3d62;
+            color: white;
+            border: none;
+            padding: 11px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #075985;
+        }
+
+        .volver {
+            background: #64748b;
+        }
+
+        .volver:hover {
+            background: #475569;
+        }
+
+        .pdf {
+            background: #b91c1c;
+            padding: 8px 12px;
+            font-size: 13px;
+        }
+
+        .pdf:hover {
+            background: #991b1b;
+        }
+
+        .ubicacion {
+            background: #15803d;
+            padding: 8px 12px;
+            font-size: 13px;
+        }
+
+        .ubicacion:hover {
+            background: #166534;
+        }
+
+        .tabla-contenedor {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1250px;
+        }
+
+        th {
+            background: #0b3d62;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+            vertical-align: top;
+        }
+
+        tr:hover {
+            background: #f8fafc;
+        }
+
+        tr.mantenimiento-pendiente {
+            background: #fee2e2 !important;
+            border-left: 6px solid #dc2626;
+        }
+
+        tr.mantenimiento-pendiente:hover {
+            background: #fecaca !important;
+        }
+
+        .estado-pendiente {
+            display: inline-block;
+            background: #dc2626;
+            color: white;
+            padding: 5px 9px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+
+        .estado-completo {
+            display: inline-block;
+            background: #15803d;
+            color: white;
+            padding: 5px 9px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .pendiente-texto {
+            display: block;
+            margin-top: 6px;
+            color: #991b1b;
+            font-weight: bold;
+        }
+
+        .tipo-equipo {
+            font-weight: bold;
+            color: #0b3d62;
+        }
+
+        .contador {
+            margin-bottom: 15px;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .mensaje {
+            padding: 20px;
+            text-align: center;
+            color: #64748b;
+        }
+
+        .acciones-fila {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #6b7280;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin-top: 15px;
+                padding: 0 10px;
+            }
+
+            .panel {
+                padding: 18px;
+            }
+
+            header h1 {
+                font-size: 24px;
+            }
+
+            .acciones {
+                flex-direction: column;
+            }
+
+            .buscar,
+            .filtro,
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>OCRIS</h1>
+    <p>Historial de Mantenimientos</p>
+</header>
+
+<main class="container">
+    <section class="panel">
+
+        <h2>📋 Historial de mantenimiento</h2>
+
+        <div class="acciones">
+            <input
+                type="text"
+                id="buscar"
+                class="buscar"
+                placeholder="Buscar por equipo, ubicación, personal, pendiente...">
+
+            <select id="filtroEquipo" class="filtro">
+                <option value="">Todos los equipos</option>
+                <option value="OCRIS">OCRIS</option>
+                <option value="Reconectadores">Reconectadores</option>
+                <option value="Reguladores">Reguladores</option>
+                <option value="Varios">Varios</option>
+            </select>
+
+            <select id="filtroMantenimiento" class="filtro">
+                <option value="">Todos los mantenimientos</option>
+                <option value="Preventivo">Preventivo</option>
+                <option value="Correctivo">Correctivo</option>
+                <option value="Inspección">Inspección</option>
+                <option value="Emergencia">Emergencia</option>
+            </select>
+
+            <select id="filtroPendiente" class="filtro">
+                <option value="">Todos los estados</option>
+                <option value="NO">✅ Sin pendiente</option>
+                <option value="SI">⚠️ Con pendiente</option>
+            </select>
+
+            <button onclick="cargarMantenimientos()">🔄 Actualizar</button>
+            <button class="volver" onclick="window.location.href='index.html'">← Inicio</button>
+        </div>
+
+        <div id="contador" class="contador">Cargando...</div>
+
+        <div class="tabla-contenedor">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Fecha</th>
+                        <th>Equipo</th>
+                        <th>Tipo de equipo</th>
+                        <th>Ubicación</th>
+                        <th>Mantenimiento</th>
+                        <th>Elemento</th>
+                        <th>Personal</th>
+                        <th>Estado</th>
+                        <th>Pendiente</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaMantenimientos">
+                    <tr>
+                        <td colspan="11" class="mensaje">Cargando información...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </section>
+</main>
+
+<footer>
+    OCRIS © 2026
+</footer>
+
+<script>
+    // ==========================================
+    // VARIABLES GLOBALES
+    // ==========================================
+    let mantenimientos = [];
+    let equipos = [];
+
+    // ==========================================
+    // CARGAR EQUIPOS DESDE API
+    // ==========================================
+    async function cargarEquipos() {
+        try {
+            const respuesta = await fetch("/api/estructuras");
+            if (respuesta.status === 401) {
+                window.location.href = "/login.html";
+                return;
+            }
+            if (respuesta.ok) {
+                const data = await respuesta.json();
+                equipos = Array.isArray(data) ? data : (data.equipos || []);
+            }
+        } catch (error) {
+            console.error("Error al cargar equipos:", error);
+            equipos = [];
+        }
+    }
+
+    // ==========================================
+    // OBTENER TIPO DE EQUIPO POR CÓDIGO
+    // ==========================================
+    function obtenerTipoEquipo(codigo) {
+        if (!codigo || !Array.isArray(equipos)) return "";
+        const codigoLimpio = String(codigo).trim().toUpperCase();
+        const equipo = equipos.find(e => String(e.codigo || "").trim().toUpperCase() === codigoLimpio);
+        return equipo ? (equipo.tipo || "") : "";
+    }
+
+    // ==========================================
+    // VERIFICAR SI TIENE PENDIENTE (MANEJA 'Sí', 'SI', etc.)
+    // ==========================================
+    function tienePendiente(mantenimiento) {
+        if (!mantenimiento) return false;
+        const pendiente = String(mantenimiento.tiene_pendiente || "")
+            .trim()
+            .toUpperCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, ""); // Quita tildes
+        return pendiente === "SI";
+    }
+
+    // ==========================================
+    // CARGAR MANTENIMIENTOS
+    // ==========================================
+    async function cargarMantenimientos() {
+        const tabla = document.getElementById("tablaMantenimientos");
+        const contador = document.getElementById("contador");
+
+        try {
+            await cargarEquipos();
+
+            const respuesta = await fetch("/api/mantenimientos");
+            
+            if (respuesta.status === 401) {
+                window.location.href = "/login.html";
+                return;
+            }
+
+            if (!respuesta.ok) {
+                throw new Error("No se pudo obtener la respuesta del servidor");
+            }
+
+            const data = await respuesta.json();
+            mantenimientos = Array.isArray(data) ? data : (data.mantenimientos || []);
+
+            aplicarFiltros();
+
+        } catch (error) {
+            console.error("Error cargando mantenimientos:", error);
+            if (tabla) {
+                tabla.innerHTML = `
+                    <tr>
+                        <td colspan="11" class="mensaje" style="color: #dc2626;">
+                            ❌ No se pudieron cargar los mantenimientos.
+                        </td>
+                    </tr>
+                `;
+            }
+            if (contador) {
+                contador.textContent = "Error al cargar información.";
+            }
+        }
+    }
+
+    // ==========================================
+    // MOSTRAR MANTENIMIENTOS EN TABLA
+    // ==========================================
+    function mostrarMantenimientos(lista) {
+        const tabla = document.getElementById("tablaMantenimientos");
+        const contador = document.getElementById("contador");
+
+        if (!tabla) return;
+
+        contador.textContent = `${lista.length} mantenimiento(s) encontrado(s)`;
+
+        if (lista.length === 0) {
+            tabla.innerHTML = `
+                <tr>
+                    <td colspan="11" class="mensaje">
+                        No hay mantenimientos que coincidan con la búsqueda.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tabla.innerHTML = "";
+
+        lista.forEach(mantenimiento => {
+            const fila = document.createElement("tr");
+            const tipoEquipo = obtenerTipoEquipo(mantenimiento.estructura);
+            const pendiente = tienePendiente(mantenimiento);
+
+            if (pendiente) {
+                fila.classList.add("mantenimiento-pendiente");
+            }
+
+            const estadoHTML = pendiente ? `
+                <span class="estado-pendiente">⚠️ PENDIENTE</span>
+            ` : `
+                <span class="estado-completo">✅ COMPLETO</span>
+            `;
+
+            const pendienteHTML = pendiente ? `
+                <span class="pendiente-texto">${escapar(mantenimiento.pendiente || "Pendiente no especificado")}</span>
+            ` : `
+                <span>—</span>
+            `;
+
+            fila.innerHTML = `
+                <td>${escapar(mantenimiento.id)}</td>
+                <td>${escapar(mantenimiento.fecha)}</td>
+                <td>${escapar(mantenimiento.estructura)}</td>
+                <td class="tipo-equipo">${escapar(tipoEquipo || "No registrado")}</td>
+                <td>${escapar(mantenimiento.ubicacion)}</td>
+                <td>${escapar(mantenimiento.tipo_mantenimiento)}</td>
+                <td>${escapar(mantenimiento.elemento)}</td>
+                <td>${escapar(mantenimiento.personal || mantenimiento.realizado_por)}</td>
+                <td>${estadoHTML}</td>
+                <td>${pendienteHTML}</td>
+                <td>
+                    <div class="acciones-fila">
+                        <button class="pdf" onclick="generarPDF(${Number(mantenimiento.id)})">
+                            📄 PDF
+                        </button>
+                        ${mantenimiento.latitud && mantenimiento.longitud ? `
+                            <button class="ubicacion" onclick="verUbicacion('${escaparJS(mantenimiento.latitud)}', '${escaparJS(mantenimiento.longitud)}')">
+                                📍 GPS
+                            </button>
+                        ` : ""}
+                    </div>
+                </td>
+            `;
+
+            tabla.appendChild(fila);
+        });
+    }
+
+    // ==========================================
+    // APLICAR FILTROS
+    // ==========================================
+    function aplicarFiltros() {
+        const texto = (document.getElementById("buscar").value || "").toLowerCase().trim();
+        const filtroEquipo = document.getElementById("filtroEquipo").value;
+        const filtroMantenimiento = document.getElementById("filtroMantenimiento").value;
+        const filtroPendiente = document.getElementById("filtroPendiente").value;
+
+        const filtrados = (mantenimientos || []).filter(mantenimiento => {
+            const tipoEquipo = obtenerTipoEquipo(mantenimiento.estructura);
+            const pendiente = tienePendiente(mantenimiento);
+            const textoPendiente = String(mantenimiento.pendiente || "").toLowerCase();
+
+            const coincideTexto = 
+                String(mantenimiento.estructura || "").toLowerCase().includes(texto) ||
+                String(tipoEquipo || "").toLowerCase().includes(texto) ||
+                String(mantenimiento.ubicacion || "").toLowerCase().includes(texto) ||
+                String(mantenimiento.personal || mantenimiento.realizado_por || "").toLowerCase().includes(texto) ||
+                String(mantenimiento.tipo_mantenimiento || "").toLowerCase().includes(texto) ||
+                String(mantenimiento.elemento || "").toLowerCase().includes(texto) ||
+                textoPendiente.includes(texto);
+
+            const coincideEquipo = !filtroEquipo || tipoEquipo === filtroEquipo;
+            const coincideMantenimiento = !filtroMantenimiento || mantenimiento.tipo_mantenimiento === filtroMantenimiento;
+            const coincidePendiente = !filtroPendiente || 
+                (filtroPendiente === "SI" && pendiente) || 
+                (filtroPendiente === "NO" && !pendiente);
+
+            return (coincideTexto && coincideEquipo && coincideMantenimiento && coincidePendiente);
+        });
+
+        mostrarMantenimientos(filtrados);
+    }
+
+    // ==========================================
+    // GENERAR PDF
+    // ==========================================
+    function generarPDF(id) {
+        if (!id) {
+            alert("No se encontró el ID del mantenimiento.");
+            return;
+        }
+        window.open(`/api/mantenimientos/${id}/pdf`, "_blank");
+    }
+
+    // ==========================================
+    // ABRIR UBICACIÓN GPS
+    // ==========================================
+    function verUbicacion(latitud, longitud) {
+        if (!latitud || !longitud) {
+            alert("Este mantenimiento no tiene ubicación GPS registrada.");
+            return;
+        }
+        const url = `https://www.google.com/maps?q=${encodeURIComponent(latitud)},${encodeURIComponent(longitud)}`;
+        window.open(url, "_blank");
+    }
+
+    // ==========================================
+    // ESCAPAR STRINGS PARA SEGURIDAD
+    // ==========================================
+    function escapar(valor) {
+        if (valor === null || valor === undefined) return "";
+        return String(valor)
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
+
+    function escaparJS(valor) {
+        return String(valor || "")
+            .replaceAll("\\", "\\\\")
+            .replaceAll("'", "\\'")
+            .replaceAll("\n", "\\n")
+            .replaceAll("\r", "\\r");
+    }
+
+    // ==========================================
+    // EVENT LISTENERS
+    // ==========================================
+    document.getElementById("buscar").addEventListener("input", aplicarFiltros);
+    document.getElementById("filtroEquipo").addEventListener("change", aplicarFiltros);
+    document.getElementById("filtroMantenimiento").addEventListener("change", aplicarFiltros);
+    document.getElementById("filtroPendiente").addEventListener("change", aplicarFiltros);
+
+    // ==========================================
+    // INICIAR AL CARGAR EL DOCUMENTO
+    // ==========================================
+    window.addEventListener("DOMContentLoaded", () => {
+        cargarMantenimientos();
+    });
+</script>
+
+</body>
+</html>
