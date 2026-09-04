@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCRIS - Historial</title>
+    <style>
+        /* VARIABLES MODO OSCURO DE ALTO CONTRASTE */
+        :root {
+            --bg-body: #f3f6f9; --bg-panel: #ffffff; --text-main: #1f2937; --text-muted: #64748b;
+            --text-heading: #0b3d62; --border-color: #cbd5e1; --bg-header: #0b3d62; --th-bg: #0b3d62;
+        }
+        [data-tema="oscuro"] {
+            --bg-body: #121212; --bg-panel: #1e1e1e; --text-main: #f8fafc; --text-muted: #94a3b8;
+            --text-heading: #60a5fa; --border-color: #3f3f46; --bg-header: #0f172a; --th-bg: #0f172a;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: var(--bg-body) !important; color: var(--text-main) !important; transition: 0.3s; }
+        header { background: var(--bg-header) !important; color: white !important; padding: 22px; transition: 0.3s; }
+        header h1, header p { color: #ffffff !important; }
+        
+        .container { max-width: 1500px; margin: 30px auto; padding: 0 20px; }
+        .panel, .modal-contenido { background: var(--bg-panel) !important; padding: 25px; border-radius: 12px; border: 1px solid var(--border-color); }
+        h2, h3, strong { color: var(--text-heading) !important; margin-bottom: 20px; }
+
+        .acciones { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .buscar, .filtro, input, select, textarea, .foto-input { flex: 1; padding: 11px; background: var(--bg-panel) !important; color: var(--text-main) !important; border: 1px solid var(--border-color) !important; border-radius: 6px; font-size: 15px; }
+        
+        button { background: var(--bg-header); color: white; border: none; padding: 11px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        button:hover { filter: brightness(0.8); }
+        .volver { background: #64748b; }
+        .pdf { background: #b91c1c; padding: 8px 12px; font-size: 13px; }
+        .ubicacion { background: #15803d; padding: 8px 12px; font-size: 13px; }
+        .btn-editar { background: #f59e0b; padding: 8px 12px; font-size: 13px; color: white;}
+        .btn-eliminar { background: #000; padding: 8px 12px; font-size: 13px; color: white;}
+        .btn-logs { background: #8b5cf6; display: none; }
+
+        /* ALTO CONTRASTE BOTONES MODO OSCURO */
+        [data-tema="oscuro"] button { background-color: #3b82f6 !important; color: white !important; border: 1px solid #60a5fa !important; }
+        [data-tema="oscuro"] button:hover { background-color: #2563eb !important; }
+        [data-tema="oscuro"] button.volver { background-color: #475569 !important; border: 1px solid #94a3b8 !important; }
+        [data-tema="oscuro"] button.volver:hover { background-color: #64748b !important; }
+        [data-tema="oscuro"] .btn-eliminar, [data-tema="oscuro"] .pdf { background-color: #dc2626 !important; border: 1px solid #f87171 !important; }
+
+        .tabla-contenedor { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 1250px; }
+        th { background: var(--th-bg) !important; color: white !important; padding: 12px; text-align: left; white-space: nowrap; }
+        td { padding: 12px; border-bottom: 1px solid var(--border-color) !important; color: var(--text-main) !important; vertical-align: top; }
+        tr:hover { background: rgba(128,128,128,0.05); }
+        tr.mantenimiento-pendiente { background: rgba(220, 38, 38, 0.05) !important; border-left: 6px solid #dc2626; }
+
+        .estado-pendiente { display: inline-block; background: #dc2626; color: white; padding: 5px 9px; border-radius: 5px; font-size: 12px; font-weight: bold; margin-bottom: 6px; }
+        .estado-completo { display: inline-block; background: #15803d; color: white; padding: 5px 9px; border-radius: 5px; font-size: 12px; font-weight: bold; }
+        .pendiente-texto { display: block; margin-top: 6px; color: #ef4444; font-weight: bold; }
+        [data-tema="oscuro"] .pendiente-texto { color: #f87171; }
+        .acciones-fila { display: flex; gap: 6px; flex-wrap: wrap; }
+        .contador { color: var(--text-muted) !important; }
+
+        /* MODAL */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; padding: 20px;}
+        .modal-contenido { width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
+        label { color: var(--text-main); font-weight: bold; }
+    </style>
+</head>
+<body>
+<header><h1>OCRIS</h1><p>Historial de Mantenimientos</p></header>
+
+<main class="container">
+    <section class="panel">
+        <h2>📋 Historial de mantenimiento</h2>
+        <div class="acciones">
+            <input type="text" id="buscar" class="buscar" placeholder="Buscar...">
+            <select id="filtroEquipo" class="filtro"><option value="">Todos los equipos</option><option value="OCRIS">OCRIS</option><option value="Reconectadores">Reconectadores</option><option value="Reguladores">Reguladores</option><option value="Varios">Varios</option></select>
+            <select id="filtroPendiente" class="filtro"><option value="">Todos</option><option value="NO">✅ Sin pendiente</option><option value="SI">⚠️ Con pendiente</option></select>
+            <button onclick="cargarMantenimientos()">🔄 Actualizar</button>
+            <button id="btnLogs" class="btn-logs" onclick="verLogs()">📜 Ver Logs de Auditoría</button>
+            <button class="volver" onclick="window.location.href='index.html'">← Inicio</button>
+        </div>
+        <div id="contador" class="contador" style="margin-bottom:15px;">Cargando...</div>
+        <div class="tabla-contenedor">
+            <table>
+                <thead><tr><th>ID</th><th>Fecha</th><th>Equipo</th><th>Ubicación</th><th>Mantenimiento</th><th>Elemento</th><th>Estado</th><th>Pendiente</th><th>Acciones</th></tr></thead>
+                <tbody id="tablaMantenimientos"></tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<!-- MODAL EDITAR -->
+<div id="modalEditar" class="modal">
+    <div class="modal-contenido">
+        <h2>✏️ Editar Mantenimiento <span id="editIdText"></span></h2>
+        <form id="formEditar" enctype="multipart/form-data">
+            <input type="hidden" id="editId">
+            <label>Fecha:</label> <input type="date" id="editFecha" required style="margin-bottom:10px; width:100%;">
+            <label>Ubicación:</label> <input type="text" id="editUbicacion" style="margin-bottom:10px; width:100%;">
+            <label>Equipo (Código):</label> <input type="text" id="editEstructura" required style="margin-bottom:10px; width:100%;">
+            <label>Tipo:</label> <select id="editTipo" required style="margin-bottom:10px; width:100%;"><option value="Preventivo">Preventivo</option><option value="Correctivo">Correctivo</option><option value="Emergencia">Emergencia</option><option value="Inspección">Inspección</option></select>
+            <label>Elemento:</label> <input type="text" id="editElemento" required style="margin-bottom:10px; width:100%;">
+            <label>Descripción:</label> <textarea id="editDescripcion" required style="margin-bottom:10px; width:100%; height:60px;"></textarea>
+            <label>Observaciones:</label> <textarea id="editObservaciones" style="margin-bottom:10px; width:100%; height:60px;"></textarea>
+            <label>Pendiente (Sí/No):</label> <select id="editTienePend" onchange="toggleEditPend()" style="margin-bottom:10px; width:100%;"><option value="No">No</option><option value="Sí">Sí</option></select>
+            <textarea id="editPendiente" placeholder="Detalle el pendiente" style="display:none; margin-bottom:10px; width:100%; height:60px;"></textarea>
+            
+            <hr style="margin: 15px 0; border: 0; border-top: 1px solid var(--border-color);">
+            
+            <label>Fotografías actuales (Presiona 'X' para quitar):</label>
+            <div id="galeriaEdicion" style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; padding: 10px; background: rgba(0,0,0,0.05); border-radius: 6px;"></div>
+
+            <label>Subir Nuevas Fotografías:</label> 
+            <input type="file" id="editFotografias" name="fotografias" multiple accept="image/jpeg,image/jpg,image/png,image/webp" style="margin-bottom:15px; width:100%; padding: 10px;">
+
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button type="submit">💾 Guardar Cambios</button>
+                <button type="button" class="volver" onclick="cerrarModal('modalEditar')">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL LOGS -->
+<div id="modalLogs" class="modal">
+    <div class="modal-contenido" style="max-width:800px;">
+        <h2>📜 Logs de Auditoría</h2>
+        <div class="tabla-contenedor" style="max-height: 400px; overflow-y: auto;">
+            <table style="min-width: 100%;">
+                <thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Mant. ID</th><th>Detalle</th></tr></thead>
+                <tbody id="tablaLogsBody"></tbody>
+            </table>
+        </div>
+        <button class="volver" style="margin-top:15px;" onclick="cerrarModal('modalLogs')">Cerrar</button>
+    </div>
+</div>
+
+<script>
+    if(localStorage.getItem('temaOscuro') === 'activo') document.documentElement.setAttribute('data-tema', 'oscuro');
+
+    let mantenimientos = [], usuarioActual = null;
+    let fotosActualesMant = [];
+
+    // Función de sanitización para evitar XSS
+    function escapar(valor) {
+        if (valor === null || valor === undefined) return "";
+        return String(valor).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+    }
+
+    async function checkUser() {
+        try {
+            const res = await fetch('/api/usuario');
+            if(res.ok) {
+                const data = await res.json();
+                usuarioActual = data.usuario;
+                if(usuarioActual && usuarioActual.rol === 'Administrador') {
+                    document.getElementById('btnLogs').style.display = 'inline-block';
+                }
+            }
+        } catch(e) {}
+    }
+
+    function toggleEditPend() {
+        const val = document.getElementById('editTienePend').value;
+        document.getElementById('editPendiente').style.display = (val === 'Sí' || val === 'SI') ? 'block' : 'none';
+    }
+
+    function cerrarModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    async function cargarMantenimientos() {
+        await checkUser();
+        const res = await fetch("/api/mantenimientos");
+        if(res.ok) {
+            mantenimientos = await res.json();
+            aplicarFiltros();
+        }
+    }
+
+    function aplicarFiltros() {
+        const txt = document.getElementById("buscar").value.toLowerCase();
+        const fPend = document.getElementById("filtroPendiente").value;
+        const tabla = document.getElementById("tablaMantenimientos");
+        tabla.innerHTML = "";
+
+        const filtrados = mantenimientos.filter(m => {
+            const pend = (m.tiene_pendiente || "").toUpperCase() === "SÍ" || (m.tiene_pendiente || "").toUpperCase() === "SI";
+            if(fPend === "SI" && !pend) return false;
+            if(fPend === "NO" && pend) return false;
+            return (m.estructura||"").toLowerCase().includes(txt) || (m.ubicacion||"").toLowerCase().includes(txt);
+        });
+
+        document.getElementById("contador").textContent = `${filtrados.length} mantenimiento(s) encontrado(s)`;
+
+        filtrados.forEach(m => {
+            const tr = document.createElement("tr");
+            const pend = (m.tiene_pendiente || "").toUpperCase() === "SÍ" || (m.tiene_pendiente || "").toUpperCase() === "SI";
+            if(pend) tr.classList.add("mantenimiento-pendiente");
+
+            let botones = `<button class="pdf" onclick="window.open('/api/mantenimientos/${m.id}/pdf')">📄 PDF</button>`;
+            if(m.latitud && m.longitud) {
+                botones += `<button class="ubicacion" onclick="window.open('https://www.google.com/maps?q=${m.latitud},${m.longitud}', '_blank')">📍 GPS</button>`;
+            }
+            if(usuarioActual && usuarioActual.rol === 'Administrador') {
+                // Corrección de comillas para evitar que se rompa el HTML
+                const datosSeguros = JSON.stringify(m).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+                botones += `<button class="btn-editar" onclick="abrirEditar('${datosSeguros}')">✏️ Editar</button>
+                            <button class="btn-eliminar" onclick="borrar(${m.id})">🗑️ Borrar</button>`;
+            }
+
+            tr.innerHTML = `
+                <td>${m.id}</td><td>${escapar(m.fecha)}</td><td>${escapar(m.estructura)}</td><td>${escapar(m.ubicacion)}</td>
+                <td>${escapar(m.tipo_mantenimiento)}</td><td>${escapar(m.elemento)}</td>
+                <td>${pend ? '<span class="estado-pendiente">⚠️ PENDIENTE</span>' : '<span class="estado-completo">✅ COMPLETO</span>'}</td>
+                <td>${pend ? `<span class="pendiente-texto">${escapar(m.pendiente)}</span>` : '—'}</td>
+                <td><div class="acciones-fila">${botones}</div></td>
+            `;
+            tabla.appendChild(tr);
+        });
+    }
+
+    function dibujarGaleriaEdicion() {
+        const galeria = document.getElementById('galeriaEdicion');
+        galeria.innerHTML = '';
+        if(fotosActualesMant.length === 0) {
+            galeria.innerHTML = '<span style="color:var(--text-muted); font-size:12px;">Sin fotografías.</span>';
+            return;
+        }
+
+        fotosActualesMant.forEach((foto, index) => {
+            const div = document.createElement('div');
+            div.style = "position: relative; width: 70px; height: 70px; border-radius: 5px; overflow: hidden; border: 1px solid var(--border-color);";
+            div.innerHTML = `
+                <img src="/uploads/mantenimientos/${escapar(foto)}" style="width: 100%; height: 100%; object-fit: cover;">
+                <button type="button" onclick="quitarFotoActual(${index})" style="position: absolute; top: 0; right: 0; background: #dc2626; color: white; border: none; width: 20px; height: 20px; cursor: pointer; font-size: 10px; display:flex; align-items:center; justify-content:center;">X</button>
+            `;
+            galeria.appendChild(div);
+        });
+    }
+
+    function quitarFotoActual(index) {
+        fotosActualesMant.splice(index, 1);
+        dibujarGaleriaEdicion();
+    }
+
+    function abrirEditar(datosCadena) {
+        // Deshacemos el escape de comillas para volver a parsear como JSON
+        const m = JSON.parse(datosCadena.replace(/&#39;/g, "'").replace(/&quot;/g, '"'));
+        document.getElementById('editId').value = m.id;
+        document.getElementById('editIdText').innerText = `#${m.id}`;
+        document.getElementById('editFecha').value = m.fecha;
+        document.getElementById('editUbicacion').value = m.ubicacion || "";
+        document.getElementById('editEstructura').value = m.estructura;
+        document.getElementById('editTipo').value = m.tipo_mantenimiento;
+        document.getElementById('editElemento').value = m.elemento;
+        document.getElementById('editDescripcion').value = m.descripcion;
+        document.getElementById('editObservaciones').value = m.observaciones || "";
+        
+        const pend = (m.tiene_pendiente || "").toUpperCase() === "SÍ" || (m.tiene_pendiente || "").toUpperCase() === "SI";
+        document.getElementById('editTienePend').value = pend ? "Sí" : "No";
+        document.getElementById('editPendiente').value = pend ? (m.pendiente || "") : "";
+        toggleEditPend();
+        
+        fotosActualesMant = [];
+        try { if(Array.isArray(m.fotos)) fotosActualesMant = [...m.fotos]; } catch(e) {}
+        dibujarGaleriaEdicion();
+
+        document.getElementById('modalEditar').style.display = 'flex';
+    }
+
+    document.getElementById('formEditar').onsubmit = async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('editId').value;
+        const formData = new FormData();
+        
+        formData.append('fecha', document.getElementById('editFecha').value);
+        formData.append('ubicacion', document.getElementById('editUbicacion').value);
+        formData.append('estructura', document.getElementById('editEstructura').value);
+        formData.append('tipo_mantenimiento', document.getElementById('editTipo').value);
+        formData.append('elemento', document.getElementById('editElemento').value);
+        formData.append('descripcion', document.getElementById('editDescripcion').value);
+        formData.append('observaciones', document.getElementById('editObservaciones').value);
+        formData.append('tiene_pendiente', document.getElementById('editTienePend').value);
+        formData.append('pendiente', document.getElementById('editPendiente').value);
+        formData.append('fotosRestantes', JSON.stringify(fotosActualesMant));
+
+        const inputFotos = document.getElementById('editFotografias');
+        for (let i = 0; i < inputFotos.files.length; i++) {
+            formData.append('fotografias', inputFotos.files[i]);
+        }
+
+        const btn = e.target.querySelector('button[type="submit"]');
+        btn.disabled = true; btn.textContent = "Guardando...";
+
+        try {
+            const res = await fetch(`/api/mantenimientos/${id}`, { method: 'PUT', body: formData });
+            if(res.ok) { alert("Actualizado."); cerrarModal('modalEditar'); inputFotos.value = ""; cargarMantenimientos(); }
+            else alert("Error al guardar.");
+        } catch(err) { alert("Error de conexión"); } 
+        finally { btn.disabled = false; btn.textContent = "💾 Guardar Cambios"; }
+    };
+
+    async function borrar(id) {
+        if(!confirm("¿Borrar definitivamente? Esto borrará el registro, las fotografías y quedará en la bitácora.")) return;
+        const res = await fetch(`/api/mantenimientos/${id}`, { method: 'DELETE' });
+        if(res.ok) { alert("Borrado correctamente."); cargarMantenimientos(); }
+    }
+
+    async function verLogs() {
+        const res = await fetch('/api/logs');
+        if(res.ok) {
+            const logs = await res.json();
+            const tb = document.getElementById('tablaLogsBody');
+            tb.innerHTML = '';
+            logs.forEach(l => { tb.innerHTML += `<tr><td>${escapar(l.fecha)}</td><td>${escapar(l.usuario)}</td><td><b>${escapar(l.accion)}</b></td><td>${l.mantenimiento_id}</td><td>${escapar(l.detalles)}</td></tr>`; });
+            document.getElementById('modalLogs').style.display = 'flex';
+        } else alert("Sin permisos");
+    }
+
+    document.getElementById("buscar").addEventListener("input", aplicarFiltros);
+    document.getElementById("filtroPendiente").addEventListener("change", aplicarFiltros);
+    window.onload = cargarMantenimientos;
+</script>
+</body>
+</html>
