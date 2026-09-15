@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OCRIS - Reportes y Análisis</title>
+    
+    <!-- LIBRERÍAS EXTERNAS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script> <!-- SheetJS para Excel nativo -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script> <!-- JSZip para empaquetar PDFs -->
+
+    <style>
+        /* =======================================================
+           VARIABLES DE COLOR 
+        ======================================================= */
+        :root {
+            --bg-body: #f1f5f9; 
+            --bg-panel: #ffffff; 
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #cbd5e1; 
+            --primary: #0284c7; 
+            --success: #16a34a;
+            --danger: #dc2626;
+            --warning: #f59e0b;
+            --dark-btn: #475569;
+        }
+        [data-tema="oscuro"] {
+            --bg-body: #0f172a; --bg-panel: #1e293b; --text-main: #f8fafc; --text-muted: #94a3b8;
+            --border-color: #334155; --primary: #38bdf8; --success: #4ade80; --danger: #ef4444;
+            --warning: #fbbf24; --dark-btn: #64748b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+        body { background-color: var(--bg-body); color: var(--text-main); transition: 0.2s; font-size: 16px; }
+        
+        header { background: var(--primary); color: white; padding: 25px 15px; text-align: center; }
+        header h1 { font-size: 32px; margin-bottom: 8px; font-weight: 800; letter-spacing: 1px;}
+        header p { font-size: 15px; opacity: 0.9; line-height: 1.4; max-width: 600px; margin: 0 auto;}
+        [data-tema="oscuro"] header { color: #0f172a; }
+        [data-tema="oscuro"] header h1, [data-tema="oscuro"] header p { color: #0f172a !important; font-weight: bold;}
+
+        .container { max-width: 1400px; margin: 20px auto; padding: 0 15px; }
+        
+        .panel { background: var(--bg-panel); padding: 25px 20px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 25px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        h2, h3 { color: var(--text-main); margin-bottom: 20px; font-weight: 800; }
+        
+        /* FILTROS (Móvil First) */
+        .filtros { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        .campo { display: flex; flex-direction: column; }
+        label { font-weight: bold; margin-bottom: 8px; color: var(--text-main); font-size: 14px;}
+        input, select { padding: 14px; background: var(--bg-body) !important; color: var(--text-main) !important; border: 1px solid var(--border-color) !important; border-radius: 8px; font-size: 16px; width: 100%;}
+        
+        /* BOTONES (Grandes y tocables) */
+        .botones { margin-top: 25px; display: grid; grid-template-columns: 1fr; gap: 12px; }
+        button { border: none; padding: 16px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; width: 100%; text-transform: uppercase;}
+        button:active { transform: scale(0.98); }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+        
+        .btn-filtrar { background: var(--primary); color: white; }
+        [data-tema="oscuro"] .btn-filtrar { color: #0f172a; }
+        .btn-limpiar { background: var(--dark-btn); color: white; }
+        .btn-pdf { background: var(--danger); color: white; }
+        .btn-excel { background: var(--success); color: white; }
+        [data-tema="oscuro"] .btn-excel { color: #0f172a; }
+        .btn-zip { background: #8b5cf6; color: white; }
+        [data-tema="oscuro"] .btn-zip { color: #0f172a; }
+        .btn-inicio { background: transparent; color: var(--text-main); border: 2px solid var(--border-color); }
+
+        .resultado { margin-top: 20px; padding: 15px; background: var(--bg-body); border-left: 5px solid var(--primary); color: var(--text-main); font-weight: bold; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;}
+
+        /* ESTADÍSTICAS (Tarjetas) */
+        .estadisticas { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
+        .tarjeta { background: var(--bg-panel); padding: 20px; text-align: center; border-radius: 12px; border: 1px solid var(--border-color); border-top: 5px solid var(--text-muted); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);}
+        .tarjeta.terminado { border-top-color: var(--success); }
+        .tarjeta.pendiente { border-top-color: var(--danger); }
+        .tarjeta h3 { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; letter-spacing: 1px; }
+        .numero { font-size: 32px; font-weight: 900; color: var(--text-main); }
+        .tarjeta.pendiente .numero { color: var(--danger); } 
+        .tarjeta.terminado .numero { color: var(--success); }
+
+        /* GRÁFICOS */
+        .dashboard-graficos { display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 25px; }
+        .grafico-tarjeta { background: var(--bg-panel); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .canvas-container { position: relative; height: 300px; width: 100%; }
+
+        /* TABLA (Scroll horizontal suave) */
+        .tabla-contenedor { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 15px; border-radius: 8px; border: 1px solid var(--border-color); }
+        table { width: 100%; border-collapse: collapse; min-width: 1200px; background: var(--bg-panel); }
+        th { background: var(--bg-body) !important; color: var(--text-main) !important; padding: 16px 12px; text-align: left; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--border-color);}
+        td { padding: 16px 12px; border-bottom: 1px solid var(--border-color) !important; color: var(--text-main) !important; vertical-align: middle; font-size: 15px;}
+        tr:hover { background: rgba(128,128,128,0.05); }
+
+        .estado { display: inline-block; padding: 8px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; white-space: nowrap; }
+        .estado-pendiente { background: rgba(220, 38, 38, 0.1); color: var(--danger); border: 1px solid var(--danger); } 
+        .estado-terminado { background: rgba(22, 163, 74, 0.1); color: var(--success); border: 1px solid var(--success); }
+        .pendiente-texto { color: var(--danger); font-weight: bold; font-size: 13px; margin-top: 5px; }
+
+        .btn-tabla-pdf { background: var(--danger); color: white; padding: 10px 15px; font-size: 13px; border-radius: 6px; white-space: nowrap; width: auto; }
+
+        /* ESTILOS DE PAGINACIÓN */
+        .paginacion { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border-color); }
+        .paginacion span { font-weight: bold; color: var(--text-main); font-size: 14px;}
+        .paginacion button { width: auto; padding: 10px 15px; background: var(--bg-panel); color: var(--text-main); border: 2px solid var(--border-color); text-transform: none; }
+        .paginacion button:disabled { opacity: 0.4; cursor: not-allowed; }
+        .paginacion button:not(:disabled):hover { background: var(--border-color); }
+
+        footer { text-align: center; margin-top: 20px; padding: 20px; color: var(--text-muted); font-size: 13px; font-weight: bold;}
+
+        /* ADAPTACIÓN PANTALLAS GRANDES */
+        @media (min-width: 768px) {
+            .filtros { grid-template-columns: repeat(3, 1fr); }
+            .botones { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+            .estadisticas { grid-template-columns: repeat(6, 1fr); }
+            .dashboard-graficos { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>OCRIS</h1>
+    <p>Análisis y Reportes de Redes de Media Tensión</p>
+    <p style="font-size: 13px; margin-top: 5px; font-weight: bold; opacity: 0.8;">GOSSR - Módulo RCM/TPM</p>
+</header>
+
+<main class="container">
+    <section class="panel panel-filtros">
+        <h2>📊 Filtros de Búsqueda y Análisis</h2>
+        <div class="filtros">
+            <div class="campo"><label>Fecha desde</label><input type="date" id="fechaDesde"></div>
+            <div class="campo"><label>Fecha hasta</label><input type="date" id="fechaHasta"></div>
+            <div class="campo"><label>Tipo de mantenimiento</label>
+                <select id="tipo">
+                    <option value="">Todos los tipos</option>
+                    <option value="Preventivo">Preventivo</option>
+                    <option value="Correctivo">Correctivo</option>
+                    <option value="Inspección">Inspección</option>
+                    <option value="Emergencia">Emergencia</option>
+                </select>
+            </div>
+            <div class="campo"><label>Equipo (Placa/Código)</label><input type="text" id="equipo" placeholder="Ej: REC-001"></div>
+            <div class="campo"><label>Elemento intervenido</label>
+                <!-- OJO: Si usas la lista dinámica, puedes dejar "Todos" y escribir el nombre del elemento para filtrar -->
+                <input type="text" id="elemento" placeholder="Ej: BATERÍA, ACEITE, CONEXIONES...">
+            </div>
+            <div class="campo"><label>Estado de ejecución</label>
+                <select id="estado">
+                    <option value="">Todos los estados</option>
+                    <option value="Terminado">🟢 Terminado (Sin pendientes)</option>
+                    <option value="Pendiente">🔴 Con Trabajos Pendientes</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="botones">
+            <button class="btn-filtrar" onclick="generarReporte()">🔎 Filtrar</button>
+            <button class="btn-limpiar" onclick="window.location.reload()">🧹 Limpiar</button>
+            <button class="btn-pdf" onclick="generarPDFReporte()">📄 Resumen PDF</button>
+            <button class="btn-excel" onclick="exportarExcel()">📊 Exportar Excel</button>
+            <button class="btn-zip" id="btnZip" onclick="descargarTicketsZIP()">🗂️ Bajar Tickets (ZIP)</button>
+            <button class="btn-inicio" onclick="window.location.href='index.html'">🏠 Inicio</button>
+        </div>
+        
+        <div class="resultado" id="resultado">
+            <span>Cargando datos del sistema...</span>
+            <span id="estadoDescargaZip" style="font-size: 13px; color: var(--primary);"></span>
+        </div>
+    </section>
+
+    <section class="estadisticas">
+        <div class="tarjeta"><h3>TOTAL TICKETS</h3><div class="numero" id="total">0</div></div>
+        <div class="tarjeta terminado"><h3>TERMINADOS</h3><div class="numero" id="terminados">0</div></div>
+        <div class="tarjeta pendiente"><h3>CON PENDIENTES</h3><div class="numero" id="pendientes">0</div></div>
+        <div class="tarjeta"><h3>PREVENTIVOS</h3><div class="numero" id="preventivos">0</div></div>
+        <div class="tarjeta"><h3>CORRECTIVOS</h3><div class="numero" id="correctivos">0</div></div>
+        <div class="tarjeta"><h3>EMERGENCIAS</h3><div class="numero" id="emergencias">0</div></div>
+    </section>
+
+    <section class="dashboard-graficos" id="dashboardGraficos" style="display: none;">
+        <div class="grafico-tarjeta"><h3>ESTADO GLOBAL DE CONFIABILIDAD</h3><div class="canvas-container"><canvas id="graficoEstados"></canvas></div></div>
+        <div class="grafico-tarjeta"><h3>DISTRIBUCIÓN POR TIPO DE TRABAJO</h3><div class="canvas-container"><canvas id="graficoTipos"></canvas></div></div>
+    </section>
+
+    <section class="panel">
+        <h2>📋 Registros de Mantenimiento Encontrados</h2>
+        <div class="tabla-contenedor">
+            <table>
+                <thead><tr>
+                    <th>ID</th><th>Fecha</th><th>Placa</th><th>Ubicación</th><th>Tipo</th>
+                    <th>Elemento</th><th>Estado</th><th>Técnico</th>
+                    <th style="min-width: 250px;">Descripción / Observaciones</th>
+                    <th class="columna-acciones">Acción</th>
+                </tr></thead>
+                <tbody id="tablaReporte"><tr><td colspan="10" style="text-align: center; padding: 30px;">Procesando información...</td></tr></tbody>
+            </table>
+        </div>
+        <!-- Paginación -->
+        <div id="paginacion" class="paginacion"></div>
+    </section>
+</main>
+
+<footer>GOSSR OCRIS © 2026 - Módulo de Reportes</footer>
+
+<script>
+    function formatearFechaDDMMAAAA(fechaStr) {
+        if (!fechaStr) return "";
+        const partesEspacio = fechaStr.split(" ");
+        const partesFecha = partesEspacio[0].split("-");
+        if (partesFecha.length === 3) {
+            return `${partesFecha[2]}/${partesFecha[1]}/${partesFecha[0]}`;
+        }
+        return fechaStr;
+    }
+    
+    if(localStorage.getItem('temaOscuro') === 'activo') document.documentElement.setAttribute('data-tema', 'oscuro');
+    
+    let mantenimientos = [], graficoEstadosInstancia = null, graficoTiposInstancia = null;
+    let mantenimientosFiltrados = [];
+    
+    // VARIABLES PARA LA PAGINACIÓN
+    let paginaActual = 1;
+    const registrosPorPagina = 20;
+
+    function escapar(valor) {
+        if (valor === null || valor === undefined) return "";
+        return String(valor).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+    }
+
+    async function cargarMantenimientos() {
+        try {
+            const respuesta = await fetch("/api/mantenimientos");
+            if (respuesta.status === 401) return window.location.href = "/login.html";
+            mantenimientos = await respuesta.json();
+            
+            // Ordenar los registros más nuevos primero (por ID descendente)
+            mantenimientos.sort((a, b) => b.id - a.id);
+            
+            generarReporte();
+        } catch (error) { 
+            document.getElementById("tablaReporte").innerHTML = `<tr><td colspan="10" style="text-align:center;">❌ Error al conectar con el servidor para cargar los datos.</td></tr>`; 
+        }
+    }
+
+    function tienePendiente(m) {
+        const val = String(m.tiene_pendiente || "").trim().toLowerCase();
+        return (val === "si" || val === "sí");
+    }
+
+    function generarReporte() {
+        const fDesde = document.getElementById("fechaDesde").value;
+        const fHasta = document.getElementById("fechaHasta").value;
+        const tipo = document.getElementById("tipo").value;
+        const equipo = document.getElementById("equipo").value.trim().toLowerCase();
+        const elem = document.getElementById("elemento").value.trim().toLowerCase();
+        const est = document.getElementById("estado").value;
+
+        mantenimientosFiltrados = mantenimientos.filter(m => {
+            if(fDesde && m.fecha < fDesde) return false; 
+            if(fHasta && m.fecha > fHasta) return false;
+            if(tipo && m.tipo_mantenimiento !== tipo) return false;
+            if(equipo && !(m.estructura||"").toLowerCase().includes(equipo)) return false;
+            if(elem && !(m.elemento||"").toLowerCase().includes(elem)) return false;
+            
+            const pend = tienePendiente(m);
+            if(est === "Pendiente" && !pend) return false; 
+            if(est === "Terminado" && pend) return false;
+            return true;
+        });
+
+        paginaActual = 1;
+
+        mostrarEstadisticas(mantenimientosFiltrados); 
+        mostrarGraficos(mantenimientosFiltrados); 
+        mostrarTabla(mantenimientosFiltrados);
+        document.querySelector("#resultado span").textContent = `Se encontraron ${mantenimientosFiltrados.length} tickets de mantenimiento.`;
+    }
+
+    function mostrarEstadisticas(l) {
+        const p = l.filter(m => tienePendiente(m)).length;
+        document.getElementById("total").textContent = l.length; 
+        document.getElementById("terminados").textContent = l.length - p;
+        document.getElementById("pendientes").textContent = p;
+        document.getElementById("preventivos").textContent = l.filter(m => m.tipo_mantenimiento === "Preventivo").length;
+        document.getElementById("correctivos").textContent = l.filter(m => m.tipo_mantenimiento === "Correctivo").length;
+        document.getElementById("emergencias").textContent = l.filter(m => m.tipo_mantenimiento === "Emergencia").length;
+    }
+
+    function mostrarGraficos(l) {
+        const cont = document.getElementById("dashboardGraficos");
+        if(l.length === 0) { cont.style.display = "none"; return; }
+        cont.style.display = window.innerWidth >= 768 ? "grid" : "block"; 
+        
+        const isDark = document.documentElement.getAttribute('data-tema') === 'oscuro';
+        const txtColor = isDark ? '#94a3b8' : '#64748b';
+        Chart.defaults.color = txtColor;
+
+        if(graficoEstadosInstancia) graficoEstadosInstancia.destroy();
+        if(graficoTiposInstancia) graficoTiposInstancia.destroy();
+        
+        const p = l.filter(m => tienePendiente(m)).length;
+        graficoEstadosInstancia = new Chart(document.getElementById('graficoEstados'), {
+            type: 'doughnut', 
+            data: { labels: ['Terminados', 'Con Pendientes'], datasets: [{ data: [l.length-p, p], backgroundColor: ['#16a34a', '#dc2626'], borderWidth:0 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+        });
+
+        graficoTiposInstancia = new Chart(document.getElementById('graficoTipos'), {
+            type: 'bar', 
+            data: { labels: ['Preventivo', 'Correctivo', 'Inspección', 'Emergencia'], datasets: [{ data: [
+                l.filter(m => m.tipo_mantenimiento === "Preventivo").length, l.filter(m => m.tipo_mantenimiento === "Correctivo").length,
+                l.filter(m => m.tipo_mantenimiento === "Inspección").length, l.filter(m => m.tipo_mantenimiento === "Emergencia").length
+            ], backgroundColor: ['#0284c7', '#f59e0b', '#8b5cf6', '#dc2626'], borderRadius: 6 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+        });
+    }
+
+    function mostrarTabla(l) {
+        const t = document.getElementById("tablaReporte"); 
+        t.innerHTML = "";
+        const totalPaginas = Math.ceil(l.length / registrosPorPagina);
+        
+        if(l.length === 0) { 
+            t.innerHTML = `<tr><td colspan="10" style="text-align:center; padding: 30px;">No se encontraron resultados para los filtros seleccionados.</td></tr>`; 
+            document.getElementById("paginacion").innerHTML = "";
+            return; 
+        }
+        
+        const inicio = (paginaActual - 1) * registrosPorPagina;
+        const fin = inicio + registrosPorPagina;
+        const datosPagina = l.slice(inicio, fin);
+        
+        datosPagina.forEach(m => {
+            const pend = tienePendiente(m);
+            const tr = document.createElement("tr");
+            
+            let estadoHtml = pend ? 
+                `<div class="estado estado-pendiente">🔴 PENDIENTE</div><div class="pendiente-texto">⚠️ ${escapar(m.pendiente)}</div>` : 
+                `<div class="estado estado-terminado">🟢 TERMINADO</div>`;
+
+            tr.innerHTML = `
+                <td><b>${m.id}</b></td>
+                <td style="white-space: nowrap;">${formatearFechaDDMMAAAA(m.fecha)}</td>
+                <td><b>${escapar(m.estructura)}</b></td>
+                <td>${escapar(m.ubicacion)}</td>
+                <td>${escapar(m.tipo_mantenimiento)}</td>
+                <td>${escapar(m.elemento)}</td>
+                <td>${estadoHtml}</td>
+                <td>${escapar(m.realizado_por||m.personal)}</td>
+                <td style="font-size: 13px; line-height: 1.4;">
+                    <b>Trabajo:</b> ${escapar(m.descripcion)}<br>
+                    <span style="color:var(--text-muted)"><b>Obs:</b> ${escapar(m.observaciones)}</span>
+                </td>
+                <td class="columna-acciones"><button class="btn-tabla-pdf" onclick="window.open('/api/mantenimientos/${m.id}/pdf')">📄 PDF</button></td>
+            `;
+            t.appendChild(tr);
+        });
+
+        renderizarControlesPaginacion(totalPaginas);
+    }
+
+    function renderizarControlesPaginacion(totalPaginas) {
+        const contenedor = document.getElementById("paginacion");
+        let html = "";
+        
+        if (totalPaginas > 1) {
+            html += `<button onclick="cambiarPagina(${paginaActual - 1})" ${paginaActual === 1 ? 'disabled' : ''}>⬅️ Anterior</button>`;
+            html += `<span>Página ${paginaActual} de ${totalPaginas}</span>`;
+            html += `<button onclick="cambiarPagina(${paginaActual + 1})" ${paginaActual === totalPaginas ? 'disabled' : ''}>Siguiente ➡️</button>`;
+        }
+        contenedor.innerHTML = html;
+    }
+
+    function cambiarPagina(nuevaPagina) {
+        const totalPaginas = Math.ceil(mantenimientosFiltrados.length / registrosPorPagina);
+        if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas) {
+            paginaActual = nuevaPagina;
+            mostrarTabla(mantenimientosFiltrados);
+            document.querySelector('.tabla-contenedor').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    // ==========================================
+    // EXPORTACIÓN A PDF GLOBAL (RESUMEN EN TABLA)
+    // ==========================================
+    function generarPDFReporte() {
+        if(mantenimientosFiltrados.length === 0) { alert("No hay datos para generar el reporte PDF."); return; }
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('landscape');
+        
+        doc.setFontSize(18); doc.setTextColor(15, 23, 42); 
+        doc.text("Reporte Gerencial de Mantenimiento GOSSR", 14, 20);
+        
+        doc.setFontSize(11); doc.setTextColor(100, 116, 139);
+        const fDesde = document.getElementById("fechaDesde").value || "El inicio de los registros";
+        const fHasta = document.getElementById("fechaHasta").value || "Hoy";
+        doc.text(`Período filtrado: Desde ${fDesde} hasta ${fHasta} | Total registros: ${mantenimientosFiltrados.length}`, 14, 28);
+        
+        const columnas = ["Ticket", "Fecha", "Placa", "Ubicación", "Tipo", "Elemento", "Estado"];
+        
+        const filas = mantenimientosFiltrados.map(m => {
+            const estado = tienePendiente(m) ? "CON PENDIENTES" : "TERMINADO";
+            return [m.id, formatearFechaDDMMAAAA(m.fecha), m.estructura, m.ubicacion, m.tipo_mantenimiento, m.elemento, estado];
+        });
+        
+        doc.autoTable({
+            startY: 35, head: [columnas], body: filas, theme: 'grid', styles: { fontSize: 9, cellPadding: 4 },
+            headStyles: { fillColor: [2, 132, 199], textColor: 255 }, 
+            didParseCell: function(data) {
+                if (data.section === 'body' && data.column.index === 6) {
+                    if (data.cell.raw === 'CON PENDIENTES') { data.cell.styles.textColor = [220, 38, 38]; data.cell.styles.fontStyle = 'bold'; } 
+                    else { data.cell.styles.textColor = [22, 163, 74]; }
+                }
+            }
+        });
+        window.open(URL.createObjectURL(doc.output('blob')), '_blank');
+    }
+
+    // ==========================================
+    // NUEVA EXPORTACIÓN A EXCEL (USANDO SHEETJS)
+    // ==========================================
+    function exportarExcel() {
+        if(mantenimientosFiltrados.length === 0) { alert("No hay datos para exportar."); return; }
+        
+        const datosExcel = mantenimientosFiltrados.map(m => ({
+            "Ticket ID": m.id,
+            "Fecha": formatearFechaDDMMAAAA(m.fecha),
+            "Placa (Equipo)": m.estructura,
+            "Ubicación": m.ubicacion,
+            "Tipo de Trabajo": m.tipo_mantenimiento,
+            "Elemento Intervenido": m.elemento,
+            "Estado": tienePendiente(m) ? "Pendiente" : "Terminado",
+            "Detalle Pendiente": m.pendiente || "Ninguno",
+            "Técnico a Cargo": m.realizado_por || m.personal || "No registrado",
+            "Descripción del Trabajo": m.descripcion,
+            "Observaciones": m.observaciones || ""
+        }));
+
+        const hoja = XLSX.utils.json_to_sheet(datosExcel);
+        
+        // Auto-ajustar un poco el ancho de las columnas en Excel
+        const anchos = [ {wch:10}, {wch:12}, {wch:15}, {wch:25}, {wch:15}, {wch:25}, {wch:15}, {wch:30}, {wch:20}, {wch:50}, {wch:40} ];
+        hoja['!cols'] = anchos;
+
+        const libro = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(libro, hoja, "Mantenimientos");
+        
+        const fechaArchivo = new Date().toISOString().split('T')[0];
+        XLSX.writeFile(libro, `Reporte_OCRIS_Mantenimiento_${fechaArchivo}.xlsx`);
+    }
+
+    // ==========================================
+    // DESCARGAR TODOS LOS PDF EN UN ARCHIVO ZIP
+    // ==========================================
+    async function descargarTicketsZIP() {
+        if(mantenimientosFiltrados.length === 0) { 
+            alert("No hay tickets para descargar. Aplique filtros primero."); 
+            return; 
+        }
+
+        const btnZip = document.getElementById("btnZip");
+        const estadoDescarga = document.getElementById("estadoDescargaZip");
+        
+        if(!confirm(`Se generará un archivo ZIP conteniendo los PDFs de ${mantenimientosFiltrados.length} tickets. Este proceso puede tardar un poco dependiendo de su conexión. ¿Desea continuar?`)) return;
+
+        btnZip.disabled = true;
+        const zip = new JSZip();
+        const carpeta = zip.folder("Tickets_Mantenimiento_OCRIS");
+        
+        let procesados = 0;
+        let fallidos = 0;
+
+        for (const mant of mantenimientosFiltrados) {
+            estadoDescarga.textContent = `Descargando PDF ${procesados + 1} de ${mantenimientosFiltrados.length}...`;
+            try {
+                // Hacemos la petición a la ruta que ya tienes en Node.js que genera el PDF
+                const respuesta = await fetch(`/api/mantenimientos/${mant.id}/pdf`);
+                if (respuesta.ok) {
+                    const blobPdf = await respuesta.blob();
+                    // Nombramos cada archivo dentro del ZIP de forma ordenada
+                    const nombreArchivo = `Ticket_${mant.id}_Placa_${mant.estructura.replace(/[^a-z0-9]/gi, '_')}.pdf`;
+                    carpeta.file(nombreArchivo, blobPdf);
+                    procesados++;
+                } else {
+                    fallidos++;
+                }
+            } catch (error) {
+                fallidos++;
+            }
+        }
+
+        if (procesados > 0) {
+            estadoDescarga.textContent = `Empaquetando archivo ZIP...`;
+            try {
+                const contenido = await zip.generateAsync({ type: "blob" });
+                
+                // Forzar la descarga del ZIP
+                const a = document.createElement("a");
+                a.href = URL.createObjectURL(contenido);
+                const fechaHoy = new Date().toISOString().split('T')[0];
+                a.download = `Tickets_Completos_OCRIS_${fechaHoy}.zip`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                
+                let msjFallo = fallidos > 0 ? ` (No se pudieron descargar ${fallidos} PDFs)` : "";
+                alert(`✅ Archivo ZIP generado con éxito con ${procesados} tickets.` + msjFallo);
+            } catch (err) {
+                alert("❌ Error al crear el archivo ZIP.");
+            }
+        } else {
+            alert("❌ No se pudo descargar ningún PDF del servidor.");
+        }
+
+        // Restaurar interfaz
+        estadoDescarga.textContent = "";
+        btnZip.disabled = false;
+    }
+
+    cargarMantenimientos();
+</script>
+</body>
+</html>

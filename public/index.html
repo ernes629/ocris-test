@@ -1,0 +1,260 @@
+<!DOCTYPE html> 
+<html lang="es"> 
+<head> 
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OCRIS - Inicio</title>
+
+    <style>
+        /* =======================================================
+           VARIABLES DE COLOR
+        ======================================================= */
+        :root {
+            --bg-body: #f1f5f9; 
+            --bg-panel: #ffffff; 
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #cbd5e1; 
+            --primary: #0284c7; 
+            --primary-hover: #0369a1;
+            --danger: #dc2626;
+            --danger-hover: #b91c1c;
+            --nav-bg: #ffffff;
+        }
+        [data-tema="oscuro"] {
+            --bg-body: #0f172a; 
+            --bg-panel: #1e293b; 
+            --text-main: #f8fafc; 
+            --text-muted: #94a3b8;
+            --border-color: #334155; 
+            --primary: #38bdf8; 
+            --primary-hover: #0284c7;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --nav-bg: #1e293b;
+        }
+
+        /* =======================================================
+           BASE Y TIPOGRAFÍA (Adaptado para móviles)
+        ======================================================= */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+        body { background-color: var(--bg-body); color: var(--text-main); transition: 0.2s; font-size: 16px; }
+        
+        header { background: var(--primary); color: white; padding: 25px 15px; text-align: center; }
+        header h1 { font-size: 32px; margin-bottom: 8px; font-weight: 800; letter-spacing: 1px;}
+        header p { font-size: 15px; opacity: 0.9; line-height: 1.4; max-width: 600px; margin: 0 auto;}
+
+        /* =======================================================
+           BARRA DE USUARIO (Diseño en columna para celular)
+        ======================================================= */
+        .usuario-barra { 
+            background: var(--bg-panel); 
+            padding: 20px 15px; 
+            display: flex; 
+            flex-direction: column; /* Apilado en móviles */
+            align-items: center; 
+            gap: 15px; 
+            border-bottom: 1px solid var(--border-color);
+        }
+        .usuario-info-container { text-align: center; }
+        .usuario-nombre { font-size: 18px; font-weight: bold; margin-bottom: 5px; color: var(--text-main); }
+        .rol { background: var(--primary); color: white; padding: 4px 10px; border-radius: 20px; font-weight: bold; font-size: 12px; display: inline-block;}
+        [data-tema="oscuro"] .rol { color: #0f172a; }
+
+        .botones-usuario { display: flex; width: 100%; gap: 10px; }
+        .botones-usuario button { flex: 1; padding: 14px; border: none; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.2s; }
+        
+        .btn-modo { background: var(--bg-body); color: var(--text-main); border: 2px solid var(--border-color); }
+        .btn-modo:active { background: var(--border-color); }
+        .btn-cerrar { background: var(--danger); color: white; }
+        .btn-cerrar:active { background: var(--danger-hover); }
+
+        /* =======================================================
+           NAVEGACIÓN (Cuadrícula de botones grandes)
+        ======================================================= */
+        nav { 
+            background: var(--nav-bg); 
+            padding: 20px 15px; 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 15px; /* Más espacio entre los botones */
+            border-bottom: 1px solid var(--border-color);
+        }
+        nav a { 
+            text-decoration: none; 
+            color: var(--text-main); 
+            background: var(--bg-body);
+            border: 1px solid var(--border-color);
+            font-weight: bold; 
+            padding: 20px 12px; /* Botones mucho más altos */
+            border-radius: 10px; /* Bordes un poco más redondeados */
+            text-align: center;
+            font-size: 16px; /* Letra más grande */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px; /* Más separación entre el ícono y la palabra */
+            transition: 0.2s;
+        }
+        nav a:active { transform: scale(0.97); } /* Efecto al presionar */
+        nav a.activo { background: var(--primary); color: white; border-color: var(--primary); }
+        [data-tema="oscuro"] nav a.activo { color: #0f172a; }
+
+        /* =======================================================
+           TARJETAS DE MÓDULOS (Grandes y tocables)
+        ======================================================= */
+        .modulos { display: grid; grid-template-columns: 1fr; gap: 20px; } /* 1 columna en móvil */
+        
+        .modulo { 
+            background: var(--bg-panel); 
+            padding: 25px; 
+            border-radius: 12px; 
+            text-align: center; 
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .modulo .icono { font-size: 50px; margin-bottom: 15px; }
+        .modulo h3 { color: var(--text-main); font-size: 20px; margin-bottom: 8px; }
+        .modulo p { color: var(--text-muted); font-size: 15px; margin-bottom: 20px; line-height: 1.4; }
+        
+        .boton { 
+            display: block; /* Ocupa todo el ancho */
+            width: 100%;
+            text-decoration: none; 
+            background: var(--primary); 
+            color: white !important; 
+            padding: 16px; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            font-size: 16px;
+            text-transform: uppercase;
+        }
+        [data-tema="oscuro"] .boton { color: #0f172a !important; }
+
+        footer { text-align: center; padding: 30px 15px; color: var(--text-muted); font-size: 13px; font-weight: bold; }
+
+        /* =======================================================
+           ADAPTACIÓN PARA PANTALLAS GRANDES (PC / Tablet)
+        ======================================================= */
+        @media (min-width: 768px) {
+            .usuario-barra { flex-direction: row; justify-content: space-between; padding: 15px 30px; }
+            .usuario-info-container { text-align: left; }
+            .botones-usuario { width: auto; }
+            nav { display: flex; flex-wrap: wrap; justify-content: center; padding: 20px; gap: 15px; } /* Más separación */
+            nav a { flex-direction: row; padding: 18px 30px; font-size: 17px; gap: 12px; } /* Botones horizontales gruesos y grandes */
+            .modulos { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+        }        
+    </style>
+</head> 
+<body> 
+    <header>
+        <h1>OCRIS</h1>
+        <p>Mantenimiento de Redes de Media Tensión</p>
+        <p>GOSSR ( OCRIS, RECONECTADORES, REGULADORES) por Andres</p>
+    </header> 
+    
+    <div class="usuario-barra">
+        <div class="usuario-info-container">
+            <div id="usuarioInfo" class="usuario-nombre">Cargando...</div>
+            <div id="rolUsuario" class="rol" style="display:none;"></div>
+        </div>
+        <div class="botones-usuario">
+            <button id="btnModoOscuro" class="btn-modo">🌙 Modo Oscuro</button>
+            <button id="btnCerrarSesion" class="btn-cerrar">Cerrar sesión</button>
+        </div>
+    </div> 
+    
+    <nav>
+        <a href="index.html" class="activo"><span>🏠</span> Inicio</a>
+        <a href="mantenimiento.html"><span>🔧</span> Trabajo</a>
+        <a href="estructuras.html"><span>⚡</span> Equipos</a>
+        <a href="historial.html"><span>📋</span> Historial</a>
+        <a href="reportes.html"><span>📊</span> Reportes</a>
+        <a href="usuarios.html"><span>👥</span> Usuarios</a>
+    </nav> 
+    
+    <main>
+        <section class="modulos">
+            <div class="modulo">
+                <div class="icono">🔧</div>
+                <h3>Nuevo Mantenimiento</h3>
+                <p>Registrar trabajos preventivos, correctivos o emergencias en terreno.</p>
+                <a class="boton" href="mantenimiento.html">Registrar</a>
+            </div>
+            
+            <div class="modulo">
+                <div class="icono">⚡</div>
+                <h3>Equipos de Red</h3>
+                <p>Gestión del inventario, agregar nuevos Reconectadores o Reguladores.</p>
+                <a class="boton" href="estructuras.html">Gestionar</a>
+            </div>
+            
+            <div class="modulo">
+                <div class="icono">📋</div>
+                <h3>Historial</h3>
+                <p>Consultar y editar todos los mantenimientos registrados en el sistema.</p>
+                <a class="boton" href="historial.html">Ver Historial</a>
+            </div>
+            
+            <div class="modulo">
+                <div class="icono">📊</div>
+                <h3>Reportes</h3>
+                <p>Generar informes PDF, exportar a Excel y ver gráficos estadísticos.</p>
+                <a class="boton" href="reportes.html">Ver Reportes</a>
+            </div>
+        </section>
+    </main> 
+    
+    <footer>OCRIS © 2026 - Gestión de Redes MT</footer> 
+    
+<script> 
+    // LÓGICA MODO OSCURO CON CAMBIO DE TEXTO
+    const btnOscuro = document.getElementById('btnModoOscuro');
+    
+    function actualizarBotonModo() {
+        if(document.documentElement.getAttribute('data-tema') === 'oscuro') {
+            btnOscuro.textContent = '☀️ Modo Claro';
+        } else {
+            btnOscuro.textContent = '🌙 Modo Oscuro';
+        }
+    }
+
+    if(localStorage.getItem('temaOscuro') === 'activo') {
+        document.documentElement.setAttribute('data-tema', 'oscuro');
+    }
+    actualizarBotonModo(); // Configurar texto inicial
+    
+    btnOscuro.addEventListener('click', () => {
+        if(document.documentElement.getAttribute('data-tema') === 'oscuro') {
+            document.documentElement.removeAttribute('data-tema');
+            localStorage.setItem('temaOscuro', 'inactivo');
+        } else {
+            document.documentElement.setAttribute('data-tema', 'oscuro');
+            localStorage.setItem('temaOscuro', 'activo');
+        }
+        actualizarBotonModo(); // Cambiar el texto al hacer clic
+    });
+
+    async function cargarUsuario() {
+        try {
+            const respuesta = await fetch("/api/usuario");
+            if (!respuesta.ok) return window.location.href = "/login.html";
+            const datos = await respuesta.json();
+            if (!datos.ok || !datos.usuario) return window.location.href = "/login.html";
+            
+            document.getElementById("usuarioInfo").textContent = datos.usuario.nombre;
+            document.getElementById("rolUsuario").textContent = datos.usuario.rol;
+            document.getElementById("rolUsuario").style.display = "inline-block";
+        } catch (error) { window.location.href = "/login.html"; }
+    }
+
+    document.getElementById("btnCerrarSesion").addEventListener("click", async function() { 
+        if (!confirm("¿Desea cerrar la sesión?")) return; 
+        const res = await fetch("/api/logout", { method: "POST" }); 
+        if (res.ok) window.location.href = "/login.html"; 
+    }); 
+
+    cargarUsuario(); 
+</script> 
+</body> 
+</html>
