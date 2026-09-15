@@ -9,7 +9,7 @@ const PDFDocument = require("pdfkit");
 
 const app = express();
 // Configurable por entorno para tu futuro servidor, o 3000 por defecto en local
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 3000;
 
 // =====================================================
 // BASE DE DATOS (SQLITE - Persistente)
