@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OCRIS - Iniciar sesión</title>
+    <style>
+        /* =======================================================
+           VARIABLES DE COLOR (Sincronizadas con OCRIS)
+        ======================================================= */
+        :root {
+            --bg-body: #f1f5f9; 
+            --bg-panel: #ffffff; 
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #cbd5e1; 
+            --primary: #0284c7; 
+            --danger: #dc2626;
+        }
+        [data-tema="oscuro"] {
+            --bg-body: #0f172a; 
+            --bg-panel: #1e293b; 
+            --text-main: #f8fafc; 
+            --text-muted: #94a3b8;
+            --border-color: #334155; 
+            --primary: #38bdf8; 
+            --danger: #ef4444;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+        body { background-color: var(--bg-body); color: var(--text-main); transition: 0.2s; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        
+        .login-box { width: 100%; max-width: 420px; background: var(--bg-panel); padding: 40px 25px; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); border: 1px solid var(--border-color); }
+        
+        .logo { text-align: center; margin-bottom: 35px; }
+        .logo h1 { color: var(--primary); font-size: 42px; margin-bottom: 5px; font-weight: 900; letter-spacing: 2px;}
+        .logo p { color: var(--text-muted); font-size: 15px; font-weight: bold; }
+        
+        .campo { margin-bottom: 20px; display: flex; flex-direction: column;}
+        label { font-weight: bold; margin-bottom: 8px; color: var(--text-main); font-size: 15px; }
+        
+        /* INPUTS TÁCTILES GIGANTES */
+        input { width: 100%; padding: 16px; background: var(--bg-body) !important; color: var(--text-main) !important; border: 1px solid var(--border-color) !important; border-radius: 8px; font-size: 16px; }
+        input:focus { outline: none; border-color: var(--primary) !important; box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.2); }
+        [data-tema="oscuro"] input:focus { box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2); }
+        
+        /* BOTÓN DE ACCIÓN */
+        button { width: 100%; padding: 18px; border: none; border-radius: 8px; background: var(--primary); color: white; font-size: 16px; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.2s; margin-top: 10px;}
+        [data-tema="oscuro"] button { color: #0f172a; }
+        button:active { transform: scale(0.98); }
+        button:disabled { opacity: 0.7; cursor: not-allowed; }
+        
+        /* MENSAJE DE ERROR */
+        .mensaje { margin-top: 20px; padding: 15px; border-radius: 8px; text-align: center; display: none; font-weight: bold; font-size: 14px;}
+        .error { background: rgba(220, 38, 38, 0.1); color: var(--danger); border: 1px solid var(--danger); }
+        
+        .info { margin-top: 30px; text-align: center; color: var(--text-muted); font-size: 13px; font-weight: bold;}
+    </style>
+</head>
+<body>
+
+<div class="login-box">
+    <div class="logo">
+        <h1>OCRIS</h1>
+        <p>Sistema de Mantenimiento MT</p>
+    </div>
+    
+    <form id="formLogin">
+        <div class="campo">
+            <label>Usuario</label>
+            <input type="text" id="usuario" autocomplete="username" placeholder="Ingrese su credencial..." required>
+        </div>
+        
+        <div class="campo">
+            <label>Contraseña</label>
+            <input type="password" id="password" autocomplete="current-password" placeholder="••••••••" required>
+        </div>
+        
+        <button type="submit" id="btnSubmit">🔐 Iniciar sesión</button>
+    </form>
+    
+    <div id="mensaje" class="mensaje error"></div>
+    
+    <div class="info">GOSSR © 2026</div>
+</div>
+
+<script>
+    if(localStorage.getItem('temaOscuro') === 'activo') document.documentElement.setAttribute('data-tema', 'oscuro');
+    
+    document.getElementById("formLogin").addEventListener("submit", async function(e) {
+        e.preventDefault();
+        
+        const usuario = document.getElementById("usuario").value.trim();
+        const password = document.getElementById("password").value;
+        const mensaje = document.getElementById("mensaje");
+        const btnSubmit = document.getElementById("btnSubmit");
+        
+        mensaje.style.display = "none";
+        btnSubmit.disabled = true;
+        btnSubmit.textContent = "⏳ Verificando...";
+        
+        try {
+            const respuesta = await fetch("/api/login", { 
+                method: "POST", 
+                headers: { "Content-Type": "application/json" }, 
+                body: JSON.stringify({ usuario, password }) 
+            });
+            const resultado = await respuesta.json();
+            
+            if (resultado.ok) {
+                btnSubmit.textContent = "✅ Acceso permitido";
+                btnSubmit.style.background = "var(--success)";
+                setTimeout(() => { window.location.href = "/"; }, 500);
+            } else { 
+                mensaje.textContent = "❌ " + (resultado.mensaje || "Usuario o contraseña incorrectos"); 
+                mensaje.style.display = "block"; 
+                btnSubmit.disabled = false;
+                btnSubmit.textContent = "🔐 Iniciar sesión";
+            }
+        } catch (error) {
+            mensaje.textContent = "❌ No se pudo conectar con el servidor OCRIS."; 
+            mensaje.style.display = "block";
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = "🔐 Iniciar sesión";
+        }
+    });
+</script>
+</body>
+</html>
