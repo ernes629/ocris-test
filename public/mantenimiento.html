@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OCRIS - Mantenimiento</title>
+    <style>
+        :root {
+            --bg-body: #f1f5f9; 
+            --bg-panel: #ffffff; 
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #cbd5e1; 
+            --primary: #0284c7; 
+            --success: #16a34a;
+            --danger: #dc2626;
+            --warning: #f59e0b;
+            --dark-btn: #475569;
+        }
+        [data-tema="oscuro"] {
+            --bg-body: #0f172a; 
+            --bg-panel: #1e293b; 
+            --text-main: #f8fafc; 
+            --text-muted: #94a3b8;
+            --border-color: #334155; 
+            --primary: #38bdf8; 
+            --success: #4ade80;
+            --danger: #ef4444;
+            --warning: #fbbf24;
+            --dark-btn: #64748b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+        body { background-color: var(--bg-body); color: var(--text-main); transition: 0.2s; font-size: 16px; }
+        
+        header { background: var(--primary); color: white; padding: 25px 15px; text-align: center; }
+        header h1 { font-size: 32px; margin-bottom: 8px; font-weight: 800; letter-spacing: 1px;}
+        header p { font-size: 15px; opacity: 0.9; line-height: 1.4; max-width: 600px; margin: 0 auto;}
+        [data-tema="oscuro"] header { color: #0f172a; }
+        [data-tema="oscuro"] header h1, [data-tema="oscuro"] header p { color: #0f172a !important; font-weight: bold;}
+        .usuario { margin-top: 15px; background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px; display: inline-block; font-size: 13px; font-weight: bold;}
+        [data-tema="oscuro"] .usuario { background: rgba(0,0,0,0.1); }
+
+        .container { max-width: 1000px; margin: 20px auto; padding: 0 15px; }
+        .formulario { background: var(--bg-panel); padding: 25px 20px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        h2 { color: var(--text-main); margin-bottom: 20px; font-weight: 800; font-size: 22px;}
+        strong { color: var(--text-main); }
+
+        .grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        @media (min-width: 768px) { .grid { grid-template-columns: 1fr 1fr; } }
+        
+        .campo { display: flex; flex-direction: column; width: 100%; position: relative; }
+        .campo-completo { grid-column: 1 / -1; }
+        label { font-weight: bold; margin-bottom: 6px; color: var(--text-main); font-size: 14px; }
+        
+        input, select, textarea { 
+            width: 100%; 
+            max-width: 100%;
+            padding: 14px; 
+            background: var(--bg-body) !important; 
+            color: var(--text-main) !important; 
+            border: 1px solid var(--border-color) !important; 
+            border-radius: 8px; 
+            font-size: 15px; 
+            box-sizing: border-box; 
+        }
+        textarea { min-height: 120px; resize: vertical; line-height: 1.5; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary) !important; box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.2); }
+        [data-tema="oscuro"] input:focus, [data-tema="oscuro"] select:focus, [data-tema="oscuro"] textarea:focus { box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2); }
+
+        input[type="date"] {
+            font-family: inherit;
+            min-height: 48px;
+            display: block;
+        }
+
+        .ayuda-campo {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        .autocomplete-items { position: absolute; border: 1px solid var(--border-color); border-top: none; z-index: 99; top: 100%; left: 0; right: 0; max-height: 250px; overflow-y: auto; background-color: var(--bg-panel); box-shadow: 0 8px 16px rgba(0,0,0,0.2); border-radius: 0 0 8px 8px; display: none; }
+        .autocomplete-items div { padding: 16px 14px; cursor: pointer; border-bottom: 1px solid var(--border-color); color: var(--text-main); font-size: 15px; }
+        .autocomplete-items div:hover { background-color: rgba(2, 132, 199, 0.1); }
+        [data-tema="oscuro"] .autocomplete-items div:hover { background-color: rgba(56, 189, 248, 0.2); }
+
+        .informacion-equipo { grid-column: 1 / -1; background: rgba(2, 132, 199, 0.05); border-left: 5px solid var(--primary); padding: 18px; border-radius: 8px; display: none; }
+        .datos-equipo-grid { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 12px; }
+        @media (min-width: 768px) { .datos-equipo-grid { grid-template-columns: 1fr 1fr; } }
+        .dato-equipo { padding: 4px 0; color: var(--text-main); font-size: 14px;}
+
+        /* Mediciones Técnicas */
+        .panel-mediciones {
+            grid-column: 1 / -1;
+            background: rgba(2, 132, 199, 0.04);
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 5px;
+            display: none;
+        }
+        .subcaja-ajustes {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .caja-opciones { display: grid; gap: 5px; padding: 18px; background: rgba(0,0,0,0.02); border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 15px; }
+        [data-tema="oscuro"] .caja-opciones { background: rgba(255,255,255,0.02); }
+        .caja-opciones label { font-weight: normal; cursor: pointer; display: flex; align-items: flex-start; gap: 12px; margin: 0; font-size: 14px; padding: 6px 0; line-height: 1.4;}
+        .caja-opciones input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; flex-shrink: 0; margin-top: -2px;}
+
+        .pendiente-box { grid-column: 1 / -1; background: rgba(245, 158, 11, 0.1); border-left: 5px solid var(--warning); padding: 20px; border-radius: 8px; }
+        .pendiente-titulo { font-size: 17px; font-weight: 800; color: #d97706; margin-bottom: 15px; }
+        [data-tema="oscuro"] .pendiente-titulo { color: var(--warning); }
+        .opciones-pendiente { display: flex; flex-direction: column; gap: 12px; }
+        @media (min-width: 600px) { .opciones-pendiente { flex-direction: row; } }
+        .opcion-pendiente { flex: 1; border: 2px solid var(--border-color); border-radius: 8px; padding: 16px; cursor: pointer; background: var(--bg-panel); text-align: center; font-weight: bold; color: var(--text-main); font-size: 15px;}
+        .opcion-si { color: var(--danger) !important; } .opcion-no { color: var(--success) !important; }
+        #campoPendiente { margin-top: 15px; display: none; }
+        #campoPendiente textarea { border-color: var(--danger) !important; background: rgba(220, 38, 38, 0.05) !important; }
+
+        .gps-box { grid-column: 1 / -1; background: rgba(22, 163, 74, 0.05); border-left: 5px solid var(--success); padding: 20px; border-radius: 8px; }
+        .gps-titulo { font-weight: 800; color: var(--success); margin-bottom: 10px; font-size: 17px; }
+        .gps-datos { background: var(--bg-panel); border: 1px solid var(--border-color); padding: 14px; border-radius: 8px; margin-top: 10px; display: none; }
+        .gps-ok { color: var(--success); font-weight: bold; } .gps-error { color: var(--danger); font-weight: bold; }
+
+        .fotos-box { grid-column: 1 / -1; background: rgba(2, 132, 199, 0.05); border-left: 5px solid var(--primary); padding: 20px; border-radius: 8px; }
+        .fotos-titulo { font-weight: 800; color: var(--primary); margin-bottom: 10px; font-size: 17px; }
+        .foto-input { width: 100%; padding: 25px 15px; border: 2px dashed var(--text-muted) !important; border-radius: 8px; background: var(--bg-body); text-align: center; font-weight: bold; cursor: pointer;}
+        .galeria { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 15px; margin-top: 20px; }
+        .foto-preview { position: relative; border-radius: 8px; overflow: hidden; background: #e2e8f0; aspect-ratio: 1 / 1; border: 1px solid var(--border-color); }
+        .foto-preview img { width: 100%; height: 100%; object-fit: cover; }
+        .aviso-fotos, .contador-fotos { margin-top: 8px; color: var(--text-muted) !important; font-size: 13px; }
+
+        .botones { margin-top: 25px; display: flex; flex-direction: column; gap: 15px; }
+        @media (min-width: 600px) { .botones { flex-direction: row; } }
+        button { border: none; padding: 16px; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: bold; text-align: center; text-transform: uppercase; width: 100%; transition: 0.2s;}
+        button:active { transform: scale(0.98); }
+        button:disabled { opacity: 0.65; cursor: not-allowed; }
+        .guardar { background: var(--primary); color: white; }
+        [data-tema="oscuro"] .guardar { color: #0f172a; }
+        .volver { background: var(--dark-btn); color: white; }
+        .btn-gps { background: transparent; color: var(--text-main); border: 2px solid var(--border-color); margin-top: 15px;}
+
+        .estado-guardado { display: none; margin-top: 25px; padding: 20px; border-radius: 8px; background: rgba(22, 163, 74, 0.1); color: var(--success); font-weight: bold; text-align: center; border: 1px solid var(--success); }
+        .estado-guardado button { margin-top: 15px; background: var(--danger); color: white; padding: 14px; }
+        .error-formulario { display: none; margin-top: 25px; padding: 20px; border-radius: 8px; background: rgba(220, 38, 38, 0.1); color: var(--danger); font-weight: bold; text-align: center; border: 1px solid var(--danger); }
+    </style>
+</head> 
+<body> 
+<header>
+    <h1>OCRIS</h1>
+    <p>Registro de Mantenimiento de Redes de Media Tensión</p>
+    <p style="font-size: 13px; margin-top: 5px; font-weight: bold; opacity: 0.8;">GOSSR (OCRIS, RECONECTADORES, REGULADORES) por Andres</p>
+    <div id="usuarioActual" class="usuario">👤 Cargando usuario...</div>
+</header> 
+
+<main class="container"> 
+<div class="formulario">
+<h2>🔧 Registrar Mantenimiento</h2>
+
+<form id="formMantenimiento" enctype="multipart/form-data">
+    <div class="grid">
+        <div class="campo">
+            <label>Fecha de ejecución *</label>
+            <input type="date" name="fecha" id="fecha" required>
+        </div>
+        
+        <div class="campo">
+            <label>Placa en Poste (Buscador) *</label>
+            <input type="text" id="equipo" name="estructura" placeholder="Toca para buscar placa de equipo..." autocomplete="off" required>
+            <div id="listaEquiposCustom" class="autocomplete-items"></div>
+            <span id="mensajeEquipos" class="contador-fotos"></span>
+        </div>
+
+        <div id="informacionEquipo" class="informacion-equipo">
+            <strong>Información técnica del equipo</strong>
+            <div id="datosEquipo" class="datos-equipo-grid"></div>
+        </div>
+
+        <div class="campo">
+            <label>Ubicación / Dirección</label>
+            <input type="text" id="ubicacion" name="ubicacion" placeholder="Ej: Sector Las Lomas">
+        </div>
+        
+        <div class="campo">
+            <label>Tipo de mantenimiento *</label>
+            <select name="tipo_mantenimiento" id="tipoMantenimiento" required>
+                <option value="">Seleccione...</option>
+                <option value="Preventivo">Preventivo</option>
+                <option value="Correctivo">Correctivo</option>
+                <option value="Inspección">Inspección</option>
+                <option value="Emergencia">Emergencia</option>
+            </select>
+        </div>
+
+        <div class="campo">
+            <label>Elemento intervenido *</label>
+            <select name="elemento" id="elemento" required>
+                <option value="">Primero seleccione la Placa en Poste...</option>
+            </select>
+        </div>     
+
+        <!-- PANEL DE MEDICIONES TÉCNICAS (CON CORRECCIÓN DE DECIMALES PARA MÓVILES) -->
+        <div id="panelMedicionesDinamicas" class="panel-mediciones">
+            <h3 style="color: var(--primary); font-size: 17px; margin-bottom: 4px; font-weight: 800;">⚡ Parámetros y Mediciones Técnicas</h3>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">
+                💡 <i>Si no realizó alguna medición, déjela en blanco. Use solo números.</i>
+            </p>
+            
+            <!-- CAMPOS OCRI -->
+            <div id="medicionesOCRI" class="grid" style="display: none;">
+                <div class="campo">
+                    <label>Tensión AC Auxiliar (V)</label>
+                    <input type="text" inputmode="decimal" class="input-decimal" id="ocri_tension_ac" placeholder="Ej: 220.0">
+                    <span class="ayuda-campo">Alimentación de servicio auxiliar (V)</span>
+                </div>
+                <div class="campo">
+                    <label>Tensión DC sin Carga (V)</label>
+                    <input type="text" inputmode="decimal" class="input-decimal" id="ocri_tension_dc_sin_carga" placeholder="Ej: 27.40">
+                    <span class="ayuda-campo">Batería en reposo / flotación (V)</span>
+                </div>
+                <div class="campo">
+                    <label>Tensión DC con Carga (V)</label>
+                    <input type="text" inputmode="decimal" class="input-decimal" id="ocri_tension_dc_con_carga" placeholder="Ej: 25.80">
+                    <span class="ayuda-campo">Batería al operar mando motor (V)</span>
+                </div>
+                <div class="campo">
+                    <label>Fecha de Batería</label>
+                    <input type="date" id="ocri_fecha_bateria">
+                    <span class="ayuda-campo">Fecha de instalación de la batería</span>
+                </div>
+                <div class="campo">
+                    <label>Tensión de Mando Motor (V)</label>
+                    <input type="text" inputmode="decimal" class="input-decimal" id="ocri_tension_mando_motor" placeholder="Ej: 24.0">
+                    <span class="ayuda-campo">Voltaje entregado al motor (V)</span>
+                </div>
+                <div class="campo">
+                    <label>Resistencia Circuito Motor (Ω)</label>
+                    <input type="text" inputmode="decimal" class="input-decimal" id="ocri_resistencia_motor" placeholder="Ej: 1.20">
+                    <span class="ayuda-campo">Resistencia óhmica del devanado (Ω)</span>
+                </div>
+            </div>
+
+            <!-- CAMPOS RECONECTADOR -->
+            <div id="medicionesRECONECTADOR" class="grid" style="display: none;">
+                <div class="campo">
+                    <label>Tensión AC Auxiliar (V)</label>
+                    <input type="text" inputmode="decimal" class="input-decimal" id="rec_tension_ac" placeholder="Ej: 220.0">
+                    <span class="ayuda-campo">Alimentación AC del control (V)</span>
+                </div>
+                <div class="campo">
+                    <label>Tensión DC sin Carga (V)</label>
+                    <input type="text" inputmode="decimal" class="input-decimal" id="rec_tension_dc_sin_carga" placeholder="Ej: 27.20">
+                    <span class="ayuda-campo">Batería en estado de flotación (V)</span>
+                </div>
+                <div class="campo">
+                    <label>Tensión DC con Carga (V)</label>
+                    <input type="text" inputmode="decimal" class="input-decimal" id="rec_tension_dc_con_carga" placeholder="Ej: 25.50">
+                    <span class="ayuda-campo">Batería durante la prueba de disparo (V)</span>
+                </div>
+                <div class="campo">
+                    <label>Fecha de Batería</label>
+                    <input type="date" id="rec_fecha_bateria">
+                    <span class="ayuda-campo">Fecha de instalación de la batería</span>
+                </div>
+                <div class="campo">
+                    <label>Tensión de Disparo (V)</label>
+                    <input type="text" inputmode="decimal" class="input-decimal" id="rec_tension_disparo" placeholder="Ej: 48.0">
+                    <span class="ayuda-campo">Pulso a la bobina o actuador magnético (V)</span>
+                </div>
+            </div>
+
+            <!-- CAMPOS REGULADOR -->
+            <div id="medicionesREGULADOR" style="display: none;">
+                <div class="grid" style="margin-bottom: 15px;">
+                    <div class="campo">
+                        <label>Tensión AC BT (V)</label>
+                        <input type="text" inputmode="decimal" class="input-decimal" id="reg_tension_ac_bt" placeholder="Ej: 220.0">
+                        <span class="ayuda-campo">Alimentación baja tensión de control (V)</span>
+                    </div>
+                    <div class="campo">
+                        <label>Tensión de Entrada (kV)</label>
+                        <input type="text" inputmode="decimal" class="input-decimal" id="reg_tension_entrada" placeholder="Ej: 24.90">
+                        <span class="ayuda-campo">Tensión de línea en entrada (kV)</span>
+                    </div>
+                    <div class="campo">
+                        <label>Tensión de Salida (kV)</label>
+                        <input type="text" inputmode="decimal" class="input-decimal" id="reg_tension_salida" placeholder="Ej: 24.90">
+                        <span class="ayuda-campo">Tensión regulada en salida (kV)</span>
+                    </div>
+                    <div class="campo">
+                        <label>Corriente de Carga (A)</label>
+                        <input type="text" inputmode="decimal" class="input-decimal" id="reg_corriente" placeholder="Ej: 45.5">
+                        <span class="ayuda-campo">Amperaje de fase medido (A)</span>
+                    </div>
+                </div>
+
+                <div class="subcaja-ajustes">
+                    <strong style="color: var(--primary); display: block; margin-bottom: 10px;">⚙️ Modo Regulación: Ajuste Directo</strong>
+                    <div class="grid">
+                        <div class="campo">
+                            <label>Tensión Deseada (V)</label>
+                            <input type="text" inputmode="decimal" class="input-decimal" id="reg_dir_tension" placeholder="Ej: 120.0">
+                            <span class="ayuda-campo">Voltaje base objetivo (V)</span>
+                        </div>
+                        <div class="campo">
+                            <label>Ancho de Banda (V)</label>
+                            <input type="text" inputmode="decimal" class="input-decimal" id="reg_dir_banda" placeholder="Ej: 2.0">
+                            <span class="ayuda-campo">Margen de tolerancia (±V)</span>
+                        </div>
+                        <div class="campo">
+                            <label>Tiempo de Retardo (s)</label>
+                            <input type="text" inputmode="numeric" class="input-entero" id="reg_dir_tiempo" placeholder="Ej: 30">
+                            <span class="ayuda-campo">Solo números enteros (s)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="subcaja-ajustes">
+                    <strong style="color: var(--primary); display: block; margin-bottom: 10px;">⚙️ Modo Regulación: Ajuste Inverso</strong>
+                    <div class="grid">
+                        <div class="campo">
+                            <label>Tensión Deseada (V)</label>
+                            <input type="text" inputmode="decimal" class="input-decimal" id="reg_inv_tension" placeholder="Ej: 120.0">
+                            <span class="ayuda-campo">Voltaje objetivo inverso (V)</span>
+                        </div>
+                        <div class="campo">
+                            <label>Ancho de Banda (V)</label>
+                            <input type="text" inputmode="decimal" class="input-decimal" id="reg_inv_banda" placeholder="Ej: 2.0">
+                            <span class="ayuda-campo">Margen de tolerancia (±V)</span>
+                        </div>
+                        <div class="campo">
+                            <label>Tiempo de Retardo (s)</label>
+                            <input type="text" inputmode="numeric" class="input-entero" id="reg_inv_tiempo" placeholder="Ej: 30">
+                            <span class="ayuda-campo">Solo números enteros (s)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid">
+                    <div class="campo">
+                        <label>¿Está restringido el cambio de tomas?</label>
+                        <select id="reg_restringido" onchange="document.getElementById('cajaTomaRestringida').style.display = (this.value === 'SI') ? 'block' : 'none';">
+                            <option value="NO">No, rango libre (±16)</option>
+                            <option value="SI">Sí, limitar tomas máximas</option>
+                        </select>
+                    </div>
+                    <div class="campo" id="cajaTomaRestringida" style="display: none;">
+                        <label>Límite de Toma Restringida</label>
+                        <select id="reg_toma_restringida">
+                            <option value="-16">-16 (Paso 16)</option>
+                            <option value="-14">-14 (Paso 14)</option>
+                            <option value="-12">-12 (Paso 12)</option>
+                            <option value="-10">-10 (Paso 10)</option>
+                            <option value="-8">-8 (Paso 8)</option>
+                        </select>
+                        <span class="ayuda-campo">Límite máximo permitido por seguridad</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="campo campo-completo">
+            <label>Descripción Trabajo Realizado *</label>
+            <div class="caja-opciones">
+                <label><input type="checkbox" class="chk-desc" value="Inspección visual, crucetas, conexiones MT, para-rayos y aterramientos.">Inspección visual, crucetas, conexiones MT, para-rayos y aterramientos.</label>
+                <label><input type="checkbox" class="chk-desc" value="Limpieza caja de control.">Limpieza caja de control.</label>
+                <label><input type="checkbox" class="chk-desc" value="Reajuste de borneras.">Reajuste de borneras.</label>
+                <label><input type="checkbox" class="chk-desc" value="Mediciones AC, DC impedancias.">Mediciones AC, DC impedancias.</label>
+                <label><input type="checkbox" class="chk-desc" value="Revisión Estado de la Bateria.">Revisión Estado de la Bateria.</label>
+                <label><input type="checkbox" class="chk-desc" value="Pruebas Funcionales.">Pruebas Funcionales.</label>
+                <label><input type="checkbox" class="chk-desc" value="Descarga Eventos.">Descarga Eventos.</label>
+                <label><input type="checkbox" class="chk-desc" value="Revision de Ajustes.">Revision de Ajustes.</label>
+            </div>
+            <textarea id="descripcionManual" placeholder="Si realizó otro trabajo no listado, descríbalo aquí..."></textarea>
+            <input type="hidden" name="descripcion" id="descripcionFinal">
+        </div>
+
+        <div class="pendiente-box">
+            <div class="pendiente-titulo">⚠️ ¿Quedó algún trabajo pendiente?</div>
+            <div class="opciones-pendiente">
+                <label class="opcion-pendiente opcion-no"><input type="radio" name="tiene_pendiente" value="NO" checked> ✅ No, todo resuelto</label>
+                <label class="opcion-pendiente opcion-si"><input type="radio" name="tiene_pendiente" value="SI"> ⚠️ Sí, quedó pendiente</label>
+            </div>
+            <div id="campoPendiente">
+                <label>Detalle del trabajo pendiente</label>
+                <textarea id="pendiente" name="pendiente" placeholder="Indique exactamente qué falta por resolver..."></textarea>
+            </div>
+        </div>
+
+        <div class="campo campo-completo"><label>Observaciones o Daños</label><textarea name="observaciones" id="observaciones" placeholder="Anote daños encontrados, materiales requeridos, etc..."></textarea></div>
+
+        <div class="gps-box">
+            <div class="gps-titulo">📍 Ubicación Geográfica</div>
+            <p id="textoGpsDescriptivo" style="font-size: 14px; margin-bottom: 10px;">El sistema intentará obtener la ubicación automáticamente.</p>
+            <div id="estadoGPS" class="gps-datos" style="display: block;">Buscando señal GPS...</div>
+            <div id="camposGpsManuales" style="display: none; margin-top: 15px;">
+                <div class="grid">
+                    <div class="campo"><label>Latitud</label><input type="text" name="latitud" id="latitud" readonly></div>
+                    <div class="campo"><label>Longitud</label><input type="text" name="longitud" id="longitud" readonly></div>
+                </div>
+            </div>
+            <button type="button" class="btn-gps" id="btnManual" style="display: none;" onclick="habilitarModoManual()">✍️ Ingresar coordenadas manualmente</button>
+        </div>
+
+        <div class="fotos-box">
+            <div class="fotos-titulo">📷 Evidencia Fotográfica</div>
+            <p style="font-size: 14px; margin-bottom: 15px;">Tome fotos con la cámara del celular o súbalas de su galería.</p>
+            <input type="file" id="fotografias" class="foto-input" accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif" capture="environment" multiple>
+            <div id="contadorFotos" class="contador-fotos">No hay fotografías seleccionadas.</div>
+            <div class="aviso-fotos">Máximo 4 fotos. Las imágenes se comprimirán automáticamente.</div>
+            <div id="galeria" class="galeria"></div>
+        </div>
+    </div>
+
+    <div class="botones">
+        <button type="submit" class="guardar" id="btnGuardar">💾 Guardar Registro</button>
+        <button type="button" class="volver" onclick="window.location.href='index.html'">🏠 Volver al Inicio</button>
+    </div>
+
+    <div id="estadoGuardado" class="estado-guardado"></div>
+    <div id="errorFormulario" class="error-formulario"></div>
+</form>
+</div> 
+</main> 
+
+<script>
+    if(localStorage.getItem('temaOscuro') === 'activo') document.documentElement.setAttribute('data-tema', 'oscuro');
+
+    // ==========================================
+    // BLOQUEO DE LETRAS EN TIEMPO REAL (NUEVO)
+    // ==========================================
+    
+    // Para campos decimales (permite números, punto y coma)
+    document.querySelectorAll('.input-decimal').forEach(input => {
+        input.addEventListener('input', function() {
+            // Borra todo lo que no sea número, coma o punto
+            this.value = this.value.replace(/[^0-9.,]/g, '');
+            // Evita que escriban múltiples comas o puntos (ej: 12.5.4)
+            const matches = this.value.match(/[.,]/g);
+            if (matches && matches.length > 1) {
+                this.value = this.value.slice(0, -1);
+            }
+        });
+    });
+
+    // Para campos enteros (ej: tiempo de retardo, solo permite números)
+    document.querySelectorAll('.input-entero').forEach(input => {
+        input.addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, ''); // Borra cualquier cosa que no sea dígito
+        });
+    });
+    // ==========================================
+
+
+    let fotosComprimidas = [];
+    let equiposGlobal = [];
+    let tipoEquipoActual = "";
+
+    const elementosPorTipo = {
+        "OCRI": [
+            "ATERRAMIENTO", "BATERÍA", "BUSHING", "CABLE DE CONTROL", "CAJA DE CONTROL",
+            "COMPONENTES BT/BORNERA/TÉRMICO/ MOV", "CONEXIONES Y TERMINALES MT",
+            "ELEMENTOS SUJECIÓN/ABRAZADERAS/HERRAJES", "GAS SF6", "INDICADOR DE POSICIÓN",
+            "MECANISMOS DE OPERACIÓN/VARILLAJE", "OCRI / TANQUE", "PARARRAYOS",
+            "PT SERVICIO AUXILIAR", "TARJETAS ELECTRÓNICAS/FUENTE"
+        ],
+        "REGULADOR": [
+            "ACEITE", "ATERRAMIENTO", "BATERÍA", "BUSHING", "CABLE DE CONTROL",
+            "CAJA DE CONTROL", "COMPONENTES BT/BORNERA/TÉRMICO/ MOV", "CONEXIONES Y TERMINALES MT",
+            "ELEMENTOS SUJECIÓN/ABRAZADERAS/HERRAJES", "INDICADORES DE POSICIÓN",
+            "PARARRAYO PARALELO", "PARARRAYO SERIE", "REGULADOR /TANQUE",
+            "PT SERVICIO AUXILIAR", "TARJETAS ELECTRÓNICAS/FUENTE"
+        ],
+        "RECONECTADOR": [
+            "ACEITE", "ATERRAMIENTO", "BATERÍA", "BUSHING", "CABLE DE CONTROL",
+            "CAJA DE CONTROL", "COMPONENTES BT/BORNERA/TÉRMICO/ MOV", "CONEXIONES Y TERMINALES MT",
+            "CUCHILLAS MT", "ELEMENTOS SUJECIÓN/ABRAZADERAS/HERRAJES", "PARA-RAYOS",
+            "PT SERVICIO AUXILIAR", "RECONECTADOR /TANQUE", "INDICADOR DE POSICIÓN",
+            "TARJETAS ELECTRÓNICAS/FUENTE"
+        ]
+    };
+
+    function actualizarElementosDinamicamente(tipoEquipo) {
+        const selectElemento = document.getElementById("elemento");
+        selectElemento.innerHTML = '<option value="">Seleccione el elemento...</option>';
+
+        const tipoBase = tipoEquipo ? String(tipoEquipo).toUpperCase().trim() : "";
+        let lista = [];
+
+        if (tipoBase.includes("OCRI")) {
+            lista = elementosPorTipo["OCRI"];
+        } else if (tipoBase.includes("REGULA") || tipoBase.includes(" G")) {
+            lista = elementosPorTipo["REGULADOR"];
+        } else if (tipoBase.includes("RECONECTA") || tipoBase.includes("RECLOSER") || tipoBase.includes("RV")) {
+            lista = elementosPorTipo["RECONECTADOR"];
+        } else {
+            lista = ["Equipo Completo", "Control", "Tanque", "Conexiones", "Otro"];
+        }
+
+        lista.forEach(item => {
+            const opcion = document.createElement("option");
+            opcion.value = item;
+            opcion.textContent = item;
+            selectElemento.appendChild(opcion);
+        });
+        
+        if(!lista.includes("Otro")) {
+            const opcionOtro = document.createElement("option");
+            opcionOtro.value = "Otro";
+            opcionOtro.textContent = "Otro...";
+            selectElemento.appendChild(opcionOtro);
+        }
+    }
+
+    function mostrarMedicionesSegunTipo(tipo) {
+        const panel = document.getElementById("panelMedicionesDinamicas");
+        const mOCRI = document.getElementById("medicionesOCRI");
+        const mREC = document.getElementById("medicionesRECONECTADOR");
+        const mREG = document.getElementById("medicionesREGULADOR");
+
+        mOCRI.style.display = "none";
+        mREC.style.display = "none";
+        mREG.style.display = "none";
+
+        const t = String(tipo || "").toUpperCase();
+        if (t.includes("OCRI")) {
+            panel.style.display = "block";
+            mOCRI.style.display = "grid";
+            tipoEquipoActual = "OCRIS";
+        } else if (t.includes("RECONECTA") || t.includes("RECLOSER") || t.includes("RV")) {
+            panel.style.display = "block";
+            mREC.style.display = "grid";
+            tipoEquipoActual = "RECONECTADOR";
+        } else if (t.includes("REGULA") || t.includes(" G")) {
+            panel.style.display = "block";
+            mREG.style.display = "block";
+            tipoEquipoActual = "REGULADOR";
+        } else {
+            panel.style.display = "none";
+            tipoEquipoActual = "";
+        }
+    }
+
+    async function comprimirImagen(file, maxWidth = 1280, maxHeight = 1280, quality = 0.75) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    let width = img.width; let height = img.height;
+                    if (width > height) {
+                        if (width > maxWidth) { height = Math.round((height *= maxWidth / width)); width = maxWidth; }
+                    } else {
+                        if (height > maxHeight) { width = Math.round((width *= maxHeight / height)); height = maxHeight; }
+                    }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    canvas.toBlob((blob) => { resolve(new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() })); }, 'image/jpeg', quality);
+                };
+            };
+        });
+    }
+
+    document.getElementById("fecha").value = new Date().toISOString().split("T")[0];
+
+    async function cargarUsuario() {
+        try {
+            const respuesta = await fetch("/api/usuario");
+            if (!respuesta.ok) return window.location.href = "/login.html";
+            const resultado = await respuesta.json();
+            if (!resultado.ok || !resultado.usuario) return window.location.href = "/login.html";
+            document.getElementById("usuarioActual").textContent = `👤 TÉCNICO: ${resultado.usuario.nombre}`;
+        } catch (error) { 
+            document.getElementById("usuarioActual").textContent = "❌ Fallo de sesión";
+        }
+    }
+
+    async function cargarEquipos() {
+        const mensaje = document.getElementById("mensajeEquipos");
+        try {
+            const respuesta = await fetch("/api/estructuras");
+            if (!respuesta.ok) throw new Error("Error");
+            let equipos = await respuesta.json();
+            
+            if (!Array.isArray(equipos) || equipos.length === 0) {
+                mensaje.textContent = "Primero registre un equipo en la red."; return;
+            }
+
+            equipos.sort((a, b) => a.codigo.localeCompare(b.codigo));
+            equiposGlobal = equipos;
+            mensaje.textContent = `✓ ${equipos.length} equipos sincronizados.`;
+        } catch (error) { mensaje.textContent = "❌ Error al cargar equipos."; }
+    }
+
+    const inputEquipo = document.getElementById("equipo");
+    const listaCustom = document.getElementById("listaEquiposCustom");
+
+    inputEquipo.addEventListener("input", function() {
+        if(this.value === "") {
+            document.getElementById("informacionEquipo").style.display = "none";
+            document.getElementById("panelMedicionesDinamicas").style.display = "none";
+            actualizarElementosDinamicamente("");
+        }
+        renderizarBuscador(this.value);
+    });
+    inputEquipo.addEventListener("focus", function() { renderizarBuscador(this.value); });
+
+    document.addEventListener("click", function (e) {
+        if (e.target !== inputEquipo && e.target !== listaCustom) {
+            listaCustom.style.display = "none";
+        }
+    });
+
+    function renderizarBuscador(filtro) {
+        listaCustom.innerHTML = "";
+        if (!equiposGlobal.length) return;
+
+        const fragment = document.createDocumentFragment();
+        const texto = (filtro || "").trim().toLowerCase();
+
+        const filtrados = equiposGlobal.filter(eq => (eq.codigo || "").toLowerCase().includes(texto));
+
+        filtrados.forEach(eq => {
+            const div = document.createElement("div");
+            const badgeTension = eq.nivel_tension ? ` [${escapar(eq.nivel_tension)}]` : '';
+            div.innerHTML = `<strong>${escapar(eq.codigo)}</strong> <br><small style="color:var(--text-muted)">${escapar(eq.tipo)}${badgeTension}</small>`;
+            div.addEventListener("click", function() {
+                inputEquipo.value = eq.codigo;
+                listaCustom.style.display = "none";
+                mostrarInfoEquipo(eq);
+            });
+            fragment.appendChild(div);
+        });
+
+        listaCustom.appendChild(fragment);
+        listaCustom.style.display = filtrados.length > 0 ? "block" : "none";
+    }
+
+    function mostrarInfoEquipo(equipo) {
+        const panel = document.getElementById("informacionEquipo");
+        const datos = document.getElementById("datosEquipo");
+        const ubicacion = document.getElementById("ubicacion");
+
+        panel.style.display = "block";
+        const badgeTension = equipo.nivel_tension ? ` (${escapar(equipo.nivel_tension)})` : '';
+        datos.innerHTML = `
+            <div class="dato-equipo"><strong>Código:</strong> ${escapar(equipo.codigo)}</div>
+            <div class="dato-equipo"><strong>Tipo:</strong> ${escapar(equipo.tipo || "N/A")}${badgeTension}</div>
+            <div class="dato-equipo"><strong>Marca:</strong> ${escapar(equipo.marca || "N/A")}</div>
+            <div class="dato-equipo"><strong>Serie:</strong> ${escapar(equipo.numero_serie || "N/A")}</div>
+            <div class="dato-equipo"><strong>Ubicación:</strong> ${escapar(equipo.ubicacion || "N/A")}</div>
+        `;
+        if (equipo.ubicacion) ubicacion.value = equipo.ubicacion;
+        
+        actualizarElementosDinamicamente(equipo.tipo);
+        mostrarMedicionesSegunTipo(equipo.tipo);
+    }
+
+    document.querySelectorAll('input[name="tiene_pendiente"]').forEach(radio => { radio.addEventListener("change", controlarPendiente); });
+
+    function controlarPendiente() {
+        const seleccionado = document.querySelector('input[name="tiene_pendiente"]:checked');
+        const campo = document.getElementById("campoPendiente");
+        const textarea = document.getElementById("pendiente");
+        if (seleccionado && seleccionado.value === "SI") { campo.style.display = "block"; textarea.required = true; } 
+        else { campo.style.display = "none"; textarea.required = false; textarea.value = ""; }
+    }
+
+    document.addEventListener("DOMContentLoaded", function() { iniciarGpsAutomatico(); });
+
+    function iniciarGpsAutomatico() {
+        const estado = document.getElementById("estadoGPS"); const btnManual = document.getElementById("btnManual");
+        const latitudInput = document.getElementById("latitud"); const longitudInput = document.getElementById("longitud");
+        const camposManuales = document.getElementById("camposGpsManuales");
+
+        if (!navigator.geolocation) { estado.innerHTML = '<span class="gps-error">❌ Dispositivo sin soporte GPS.</span>'; btnManual.style.display = "inline-block"; camposManuales.style.display = "block"; return; }
+        navigator.geolocation.getCurrentPosition(
+            function(posicion) {
+                latitudInput.value = posicion.coords.latitude; longitudInput.value = posicion.coords.longitude;
+                estado.innerHTML = `<span class="gps-ok">✅ Ubicación detectada vía Satélite</span>`;
+                camposManuales.style.display = "block"; btnManual.style.display = "inline-block";
+            },
+            function(error) {
+                estado.innerHTML = `<span class="gps-error">❌ Falló el GPS Automático.</span><br><br>Ingrese las coordenadas manualmente si es posible.`;
+                camposManuales.style.display = "block"; btnManual.style.display = "inline-block"; habilitarModoManual(); 
+            }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        );
+    }
+
+    function habilitarModoManual() {
+        document.getElementById("latitud").removeAttribute("readonly"); document.getElementById("longitud").removeAttribute("readonly");
+        document.getElementById("btnManual").style.display = "none"; document.getElementById("estadoGPS").innerHTML = `<span>✍️ Modo manual activado.</span>`;
+    }
+
+    document.getElementById("fotografias").addEventListener("change", async function(evento) {
+        const archivos = Array.from(evento.target.files || []);
+        if (archivos.length === 0) return;
+        
+        if (fotosComprimidas.length + archivos.length > 4) { 
+            alert("⚠️ Solo se permiten 4 fotografías como máximo en total."); 
+            evento.target.value = ""; return; 
+        }
+
+        const contador = document.getElementById("contadorFotos");
+        contador.textContent = `⏳ Procesando imágenes...`;
+        
+        for (let i = 0; i < archivos.length; i++) {
+            const archivoOptimizado = await comprimirImagen(archivos[i]);
+            fotosComprimidas.push(archivoOptimizado);
+        }
+        
+        evento.target.value = ""; 
+        actualizarGaleria();
+    });
+
+    function actualizarGaleria() {
+        const galeria = document.getElementById("galeria");
+        const contador = document.getElementById("contadorFotos");
+        galeria.innerHTML = "";
+
+        if (fotosComprimidas.length === 0) {
+            contador.textContent = "No hay fotografías seleccionadas."; return;
+        }
+
+        fotosComprimidas.forEach((foto, index) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const contenedor = document.createElement("div"); 
+                contenedor.className = "foto-preview";
+                const imagen = document.createElement("img"); 
+                imagen.src = e.target.result;
+                const btnEliminar = document.createElement("button");
+                btnEliminar.type = "button";
+                btnEliminar.innerHTML = "X";
+                btnEliminar.style = "position: absolute; top: 5px; right: 5px; background: #dc2626; color: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; font-weight: bold; font-size: 16px; display: flex; align-items: center; justify-content: center; padding: 0;";
+                btnEliminar.onclick = function() { fotosComprimidas.splice(index, 1); actualizarGaleria(); };
+                
+                contenedor.appendChild(imagen); 
+                contenedor.appendChild(btnEliminar);
+                galeria.appendChild(contenedor);
+            };
+            reader.readAsDataURL(foto);
+        });
+        contador.textContent = `✅ ${fotosComprimidas.length} de 4 fotografías agregadas.`;
+    }
+
+    document.getElementById("formMantenimiento").addEventListener("invalid", function(evento) {
+        evento.preventDefault(); 
+        alert("⚠️ ATENCIÓN: Faltan datos obligatorios (Fecha, Placa, Tipo o Elemento).");
+    }, true);
+
+
+    // ==========================================
+    // FUNCIÓN DE VALIDACIÓN CORREGIDA
+    // Reemplaza la coma por punto automáticamente
+    // ==========================================
+    function validarNumeroOpcional(valor, nombreCampo) {
+        if (valor === null || valor === undefined) return null;
+        
+        // Limpiamos los espacios y cambiamos la COMA por PUNTO
+        let textoLimpio = String(valor).trim().replace(',', '.');
+        
+        if (textoLimpio === "") return null; // PERMITIDO VACÍO
+        
+        const num = Number(textoLimpio);
+        if (isNaN(num)) {
+            throw new Error(`El campo "${nombreCampo}" contiene un valor inválido. Asegúrese de ingresar solo números.`);
+        }
+        return num;
+    }
+
+
+    document.getElementById("formMantenimiento").addEventListener("submit", async function(evento) {
+        evento.preventDefault();
+
+        const equipoIngresado = document.getElementById("equipo").value.trim().toUpperCase();
+        const equipoExiste = equiposGlobal.some(eq => (eq.codigo || "").trim().toUpperCase() === equipoIngresado);
+        
+        if (!equipoExiste) {
+            alert("⚠️ La Placa en Poste no está registrada. Seleccione una opción válida de la lista."); 
+            return;
+        }
+
+        const checkboxesMarcados = document.querySelectorAll('.chk-desc:checked');
+        const descManual = document.getElementById('descripcionManual').value.trim();
+        const descFinalInput = document.getElementById('descripcionFinal');
+        
+        let arregloDesc = [];
+        checkboxesMarcados.forEach(chk => { arregloDesc.push("- " + chk.value); });
+        if (descManual) { arregloDesc.push("- Otros: " + descManual); }
+        descFinalInput.value = arregloDesc.join("\n");
+
+        if (descFinalInput.value === "") { 
+            alert("⚠️ Debe marcar al menos una tarea en 'Descripción Trabajo Realizado' o escribirla en 'Otros'."); 
+            return; 
+        }
+
+        const formulario = this; 
+        const btnGuardar = document.getElementById("btnGuardar");
+        const estadoGuardado = document.getElementById("estadoGuardado"); 
+        const errorFormulario = document.getElementById("errorFormulario");
+        estadoGuardado.style.display = "none"; 
+        errorFormulario.style.display = "none";
+
+        // VALIDACIÓN DE MEDICIONES TÉCNICAS
+        let medicionesObj = null;
+        if (tipoEquipoActual) {
+            medicionesObj = { tipo_equipo: tipoEquipoActual };
+            try {
+                if (tipoEquipoActual === "OCRIS") {
+                    medicionesObj.tension_ac = validarNumeroOpcional(document.getElementById("ocri_tension_ac").value, "Tensión AC Auxiliar");
+                    medicionesObj.tension_dc_sin_carga = validarNumeroOpcional(document.getElementById("ocri_tension_dc_sin_carga").value, "Tensión DC sin Carga");
+                    medicionesObj.tension_dc_con_carga = validarNumeroOpcional(document.getElementById("ocri_tension_dc_con_carga").value, "Tensión DC con Carga");
+                    medicionesObj.fecha_bateria = document.getElementById("ocri_fecha_bateria").value || null;
+                    medicionesObj.tension_mando_motor = validarNumeroOpcional(document.getElementById("ocri_tension_mando_motor").value, "Tensión Mando Motor");
+                    medicionesObj.resistencia_circuito_motor = validarNumeroOpcional(document.getElementById("ocri_resistencia_motor").value, "Resistencia Circuito Motor");
+                } else if (tipoEquipoActual === "RECONECTADOR") {
+                    medicionesObj.tension_ac = validarNumeroOpcional(document.getElementById("rec_tension_ac").value, "Tensión AC Auxiliar");
+                    medicionesObj.tension_dc_sin_carga = validarNumeroOpcional(document.getElementById("rec_tension_dc_sin_carga").value, "Tensión DC sin Carga");
+                    medicionesObj.tension_dc_con_carga = validarNumeroOpcional(document.getElementById("rec_tension_dc_con_carga").value, "Tensión DC con Carga");
+                    medicionesObj.fecha_bateria = document.getElementById("rec_fecha_bateria").value || null;
+                    medicionesObj.tension_disparo = validarNumeroOpcional(document.getElementById("rec_tension_disparo").value, "Tensión de Disparo");
+                } else if (tipoEquipoActual === "REGULADOR") {
+                    medicionesObj.tension_ac_bt = validarNumeroOpcional(document.getElementById("reg_tension_ac_bt").value, "Tensión AC BT");
+                    medicionesObj.tension_entrada = validarNumeroOpcional(document.getElementById("reg_tension_entrada").value, "Tensión de Entrada");
+                    medicionesObj.tension_salida = validarNumeroOpcional(document.getElementById("reg_tension_salida").value, "Tensión de Salida");
+                    medicionesObj.corriente = validarNumeroOpcional(document.getElementById("reg_corriente").value, "Corriente de Carga");
+                    medicionesObj.ajuste_directo = {
+                        tension: validarNumeroOpcional(document.getElementById("reg_dir_tension").value, "Ajuste Directo Tensión"),
+                        ancho_banda: validarNumeroOpcional(document.getElementById("reg_dir_banda").value, "Ajuste Directo Ancho Banda"),
+                        tiempo: validarNumeroOpcional(document.getElementById("reg_dir_tiempo").value, "Ajuste Directo Tiempo")
+                    };
+                    medicionesObj.ajuste_inverso = {
+                        tension: validarNumeroOpcional(document.getElementById("reg_inv_tension").value, "Ajuste Inverso Tensión"),
+                        ancho_banda: validarNumeroOpcional(document.getElementById("reg_inv_banda").value, "Ajuste Inverso Ancho Banda"),
+                        tiempo: validarNumeroOpcional(document.getElementById("reg_inv_tiempo").value, "Ajuste Inverso Tiempo")
+                    };
+                    medicionesObj.restringido = document.getElementById("reg_restringido").value;
+                    medicionesObj.toma_restringida = (medicionesObj.restringido === "SI") ? document.getElementById("reg_toma_restringida").value : "N/A";
+                }
+            } catch (errVal) {
+                alert("⚠️ DATO NO VÁLIDO:\n" + errVal.message);
+                return;
+            }
+        }
+
+        btnGuardar.disabled = true; 
+        btnGuardar.textContent = "⏳ Procesando...";
+
+        try {
+            const datos = new FormData(formulario);
+            datos.delete("fotografias");
+            
+            // Adjuntar fotos con corchetes [] para PHP
+            fotosComprimidas.forEach(foto => datos.append("fotografias[]", foto));
+
+            if (medicionesObj) {
+                datos.append("mediciones", JSON.stringify(medicionesObj));
+            }
+
+            const respuesta = await fetch("/api/mantenimientos", { method: "POST", body: datos });
+            let resultado;
+            try { resultado = await respuesta.json(); } catch (error) { throw new Error("Error en servidor."); }
+            if (!respuesta.ok) throw new Error(resultado.mensaje || "Error al guardar.");
+            
+            if (resultado.ok) {
+                estadoGuardado.style.display = "block";
+                estadoGuardado.innerHTML = `✅ ¡Mantenimiento registrado con éxito!<br><br><strong>ID MANTENIMIENTO: #${escapar(resultado.id)}</strong><br><br><button type="button" onclick="abrirPDF(${Number(resultado.id)})">📄 Descargar Informe PDF</button>`;
+                
+                formulario.reset(); 
+                document.getElementById("fecha").value = new Date().toISOString().split("T")[0];
+                document.getElementById("informacionEquipo").style.display = "none"; 
+                document.getElementById("panelMedicionesDinamicas").style.display = "none";
+                document.getElementById("campoPendiente").style.display = "none";
+                document.getElementById("galeria").innerHTML = ""; 
+                document.getElementById("contadorFotos").textContent = "No hay fotografías seleccionadas.";
+                document.getElementById("estadoGPS").style.display = "block"; 
+                document.getElementById("estadoGPS").innerHTML = "Buscando señal GPS...";
+                document.getElementById("latitud").value = ""; 
+                document.getElementById("longitud").value = "";
+                iniciarGpsAutomatico(); 
+                document.getElementById("pendiente").required = false; 
+                descFinalInput.value = ""; 
+                fotosComprimidas = [];
+                tipoEquipoActual = "";
+                
+                setTimeout(() => { document.getElementById("estadoGuardado").scrollIntoView({ behavior: 'smooth', block: 'end' }); }, 300);
+            } else { 
+                throw new Error(resultado.mensaje || "Error al guardar."); 
+            }
+        } catch (error) { 
+            errorFormulario.style.display = "block"; 
+            errorFormulario.textContent = `❌ ${error.message || "Error de conexión."}`; 
+            setTimeout(() => { document.getElementById("errorFormulario").scrollIntoView({ behavior: 'smooth', block: 'end' }); }, 100);
+        } finally { 
+            btnGuardar.disabled = false; 
+            btnGuardar.textContent = "💾 Guardar Registro"; 
+        }
+    });
+
+    function abrirPDF(id) { if (!id) return; window.open(`/api/mantenimientos/${encodeURIComponent(id)}/pdf`, "_blank"); }
+    function escapar(valor) { if (valor === null || valor === undefined) return ""; return String(valor).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;"); }
+
+    cargarUsuario(); 
+    cargarEquipos(); 
+    controlarPendiente();
+</script> 
+</body> 
+</html>

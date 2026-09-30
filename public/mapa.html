@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OCRIS - Mapa de Red MT</title>
+    
+    <!-- LIBRERÍAS DE MAPAS (LEAFLET) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        :root {
+            --bg-body: #f1f5f9; --bg-panel: #ffffff; --text-main: #1e293b; --text-muted: #64748b;
+            --border-color: #cbd5e1; --primary: #0284c7; --success: #16a34a; --danger: #dc2626;
+            --warning: #f59e0b; --dark-btn: #475569;
+        }
+        [data-tema="oscuro"] {
+            --bg-body: #0f172a; --bg-panel: #1e293b; --text-main: #f8fafc; --text-muted: #94a3b8;
+            --border-color: #334155; --primary: #38bdf8; --success: #4ade80; --danger: #ef4444;
+            --warning: #fbbf24; --dark-btn: #64748b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+        body { background-color: var(--bg-body); color: var(--text-main); transition: 0.2s; font-size: 15px; display: flex; flex-direction: column; height: 100vh; margin: 0; }
+        
+        header { background: var(--primary); color: white; padding: 20px 15px; text-align: center; flex-shrink: 0; }
+        header h1 { font-size: 26px; margin-bottom: 5px; font-weight: 800; letter-spacing: 1px; }
+        header p { font-size: 14px; opacity: 0.9; margin: 0 auto; font-weight: bold; }
+        [data-tema="oscuro"] header { color: #0f172a; }
+
+        /* Contenedor principal que ocupa todo el espacio restante */
+        main { flex-grow: 1; display: flex; flex-direction: column; padding: 15px; max-width: 1400px; margin: 0 auto; width: 100%; }
+        
+        .filtros { background: var(--bg-panel); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .filtros select, .filtros button { padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-body); color: var(--text-main); font-size: 14px; outline: none; flex: 1; min-width: 150px; }
+        .filtros button { background: var(--dark-btn); color: white; border: none; font-weight: bold; cursor: pointer; }
+        
+        /* Contenedor del Mapa */
+        #mapa-contenedor { flex-grow: 1; width: 100%; border-radius: 12px; border: 2px solid var(--border-color); overflow: hidden; min-height: 400px; background: #e2e8f0; position: relative;}
+        
+        /* Estilos del Popup de Leaflet */
+        .leaflet-popup-content-wrapper { background: var(--bg-panel); color: var(--text-main); border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .leaflet-popup-tip { background: var(--bg-panel); }
+        .popup-custom h3 { color: var(--primary); margin-bottom: 5px; font-size: 16px; font-weight: 900;}
+        .popup-custom p { margin: 3px 0; font-size: 13px;}
+        .btn-navegar { display: block; width: 100%; background: var(--success); color: white !important; text-align: center; padding: 10px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-top: 10px; }
+        
+        /* Pines personalizados */
+        .pin-equipo { border-radius: 50%; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🗺️ Mapa de Red OCRIS</h1>
+    <p>Ubicación GPS y Navegación de Activos de Media Tensión</p>
+</header>
+
+<main>
+    <div class="filtros">
+        <select id="filtroTipo" onchange="dibujarPines()">
+            <option value="TODOS">Todos los Equipos</option>
+            <option value="OCRIS">Solo OCRIS</option>
+            <option value="RECONECTADOR">Solo Reconectadores</option>
+            <option value="REGULADOR">Solo Reguladores</option>
+        </select>
+        <select id="filtroEstado" onchange="dibujarPines()">
+            <option value="TODOS">Todos los Estados</option>
+            <option value="Operativo">🟢 Operativos</option>
+            <option value="En mantenimiento">🟡 En mantenimiento</option>
+            <option value="Fuera de servicio">🔴 Fuera de servicio</option>
+        </select>
+        <button onclick="window.location.href='index.html'">🏠 Volver al Inicio</button>
+    </div>
+
+    <div id="mapa-contenedor"></div>
+</main>
+
+<script>
+    if(localStorage.getItem('temaOscuro') === 'activo') document.documentElement.setAttribute('data-tema', 'oscuro');
+
+    let mapa;
+    let marcadores = [];
+    let equiposGlobal = [];
+
+    // Inicializar el mapa
+    function inicializarMapa() {
+        // Coordenadas base (Centro de Bolivia / Santa Cruz aprox)
+        mapa = L.map('mapa-contenedor').setView([-17.7833, -63.1821], 11);
+
+        // Capa de OpenStreetMap (Gratis)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap | OCRIS GOSSR',
+            maxZoom: 19
+        }).addTo(mapa);
+    }
+
+    async function cargarEquipos() {
+        try {
+            const res = await fetch('/api/estructuras');
+            if (res.ok) {
+                equiposGlobal = await res.json();
+                dibujarPines();
+            }
+        } catch (error) {
+            console.error("Error al cargar equipos:", error);
+            alert("No se pudieron cargar las ubicaciones.");
+        }
+    }
+
+    function dibujarPines() {
+        // Borrar marcadores anteriores
+        marcadores.forEach(m => mapa.removeLayer(m));
+        marcadores = [];
+
+        const fTipo = document.getElementById('filtroTipo').value;
+        const fEstado = document.getElementById('filtroEstado').value;
+
+        // Limites para centrar el mapa automáticamente
+        let limites = L.latLngBounds();
+        let pinesAgregados = 0;
+
+        equiposGlobal.forEach(eq => {
+            // Validar si tiene coordenadas válidas
+            const lat = parseFloat(eq.latitud);
+            const lng = parseFloat(eq.longitud);
+            if (isNaN(lat) || isNaN(lng)) return;
+
+            // Filtros
+            const tipoEq = (eq.tipo || "").toUpperCase();
+            if (fTipo !== "TODOS" && !tipoEq.includes(fTipo)) return;
+            if (fEstado !== "TODOS" && eq.estado !== fEstado) return;
+
+            // Determinar color del Pin según estado
+            let colorPin = '#16a34a'; // Verde (Operativo)
+            if (eq.estado === 'En mantenimiento') colorPin = '#f59e0b'; // Amarillo
+            if (eq.estado === 'Fuera de servicio') colorPin = '#dc2626'; // Rojo
+
+            // Crear ícono personalizado HTML
+            const iconoHTML = L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div class="pin-equipo" style="background-color: ${colorPin}; width: 20px; height: 20px;"></div>`,
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            });
+
+            // Enlace inteligente (Si está en celular abre Maps App, si está en PC abre web)
+            const linkNavegacion = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+
+            const contenidoPopup = `
+                <div class="popup-custom">
+                    <h3>${eq.codigo}</h3>
+                    <p><b>Tipo:</b> ${eq.tipo}</p>
+                    <p><b>Ubicación:</b> ${eq.ubicacion || 'N/A'}</p>
+                    <p><b>Estado:</b> ${eq.estado}</p>
+                    <a href="${linkNavegacion}" target="_blank" class="btn-navegar">🗺️ Navegar hasta aquí</a>
+                </div>
+            `;
+
+            // Agregar al mapa
+            const marcador = L.marker([lat, lng], { icon: iconoHTML })
+                .bindPopup(contenidoPopup);
+            
+            marcador.addTo(mapa);
+            marcadores.push(marcador);
+            
+            limites.extend([lat, lng]);
+            pinesAgregados++;
+        });
+
+        // Ajustar zoom para que se vean todos los equipos filtrados
+        if (pinesAgregados > 0) {
+            mapa.fitBounds(limites, { padding: [30, 30] });
+        }
+    }
+
+    // Arrancar cuando la ventana cargue
+    window.onload = () => {
+        inicializarMapa();
+        cargarEquipos();
+    };
+</script>
+</body>
+</html>
