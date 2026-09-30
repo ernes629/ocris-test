@@ -68,7 +68,7 @@
         <select id="filtroEstado" onchange="dibujarPines()">
             <option value="TODOS">Todos los Estados</option>
             <option value="Operativo">🟢 Operativos</option>
-            <option value="En mantenimiento">🟡 En mantenimiento</option>
+            <option value="En Mantenimiento">🟡 En Mantenimiento</option>
             <option value="Fuera de servicio">🔴 Fuera de servicio</option>
         </select>
         <button onclick="window.location.href='index.html'">🏠 Volver al Inicio</button>
@@ -134,7 +134,7 @@
 
             // Determinar color del Pin según estado
             let colorPin = '#16a34a'; // Verde (Operativo)
-            if (eq.estado === 'En mantenimiento') colorPin = '#f59e0b'; // Amarillo
+            if (eq.estado === 'En Mantenimiento') colorPin = '#f59e0b'; // Amarillo
             if (eq.estado === 'Fuera de servicio') colorPin = '#dc2626'; // Rojo
 
             // Crear ícono personalizado HTML
