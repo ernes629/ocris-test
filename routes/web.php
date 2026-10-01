@@ -1,7 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth; // <-- IMPORTANTE: Agregado para poder leer el rol del usuario en las rutas
+use Illuminate\Support\Facades\Auth; 
+use Illuminate\Support\Facades\Artisan; // <- Agregado para poder limpiar la caché
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EstructuraController;
 use App\Http\Controllers\MantenimientoController;
@@ -14,8 +15,17 @@ use App\Models\LogAuditoria;
 // 1. RUTAS PÚBLICAS (No requieren sesión)
 // ==========================================
 Route::get('/', function () { return file_get_contents(public_path('index.html')); });
-Route::get('/login.html', function () { return file_get_contents(public_path('login.html')); });
-Route::post('/api/login', [AuthController::class, 'login'])->middleware('throttle:5,1'); // Bloquea tras 5 intentos fallidos
+
+// 🛡️ CORRECCIÓN: Le pusimos ->name('login') para que Laravel sepa a dónde redirigir
+Route::get('/login.html', function () { return file_get_contents(public_path('login.html')); })->name('login');
+
+Route::post('/api/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+
+// RUTA PARA LIMPIAR CACHÉ (La pusimos en la zona pública para que puedas usarla)
+Route::get('/limpiar-cache', function() {
+    Artisan::call('optimize:clear');
+    return "¡La caché de Laravel ha sido limpiada con éxito en Render!";
+});
 
 // Enlace de fotos 
 Route::get('/uploads/mantenimientos/{foto}', function ($foto) {
@@ -25,7 +35,7 @@ Route::get('/uploads/mantenimientos/{foto}', function ($foto) {
 });
 
 // ==========================================
-// 2. RUTAS PROTEGIDAS (Solo usuarios logueados: Técnicos, Supervisores, Admin)
+// 2. RUTAS PROTEGIDAS (Solo usuarios logueados)
 // ==========================================
 Route::middleware('auth')->group(function () {
     
@@ -49,18 +59,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/rcm/diagnostico', [RcmController::class, 'diagnostico']);
 
     // ==========================================
-    // 3. RUTAS CRÍTICAS (Restringidas internamente al Admin en los controladores)
+    // 3. RUTAS CRÍTICAS
     // ==========================================
-    
-    // Borrados de Equipos
     Route::delete('/api/estructuras/masivo', [EstructuraController::class, 'destroyMasivo']);
     Route::delete('/api/estructuras/{id}', [EstructuraController::class, 'destroy']);
     
-    // Borrados de Mantenimientos y Migración
     Route::delete('/api/mantenimientos/{id}', [MantenimientoController::class, 'destroy']);
     Route::post('/api/mantenimientos/migrar-antiguos', [MantenimientoController::class, 'migrarAntiguos']);
 
-    // Edición del Plan de Mantenimiento
     Route::post('/api/plan', [PlanMantenimientoController::class, 'store']);
     Route::post('/api/plan/masivo', [PlanMantenimientoController::class, 'storeMasivo']);
     Route::put('/api/plan/{id}/estado', [PlanMantenimientoController::class, 'cambiarEstado']);
@@ -68,17 +74,14 @@ Route::middleware('auth')->group(function () {
     Route::delete('/api/plan/masivo', [PlanMantenimientoController::class, 'destroyMasivo']);
     Route::delete('/api/plan/{id}', [PlanMantenimientoController::class, 'destroy']);
 
-    // Gestión de Usuarios
     Route::get('/api/usuarios', [UsuarioController::class, 'index']);
     Route::post('/api/usuarios', [UsuarioController::class, 'store']);
     Route::put('/api/usuarios/{id}', [UsuarioController::class, 'update']);
     Route::delete('/api/usuarios/{id}', [UsuarioController::class, 'destroy']);
 
     // ==========================================
-    // 4. RUTAS SUPER ADMIN (Protegidas desde aquí para evitar Fuga de Datos)
+    // 4. RUTAS SUPER ADMIN
     // ==========================================
-    
-    // Logs de Auditoría
     Route::get('/api/logs', function () {
         if (Auth::user()->rol !== 'Administrador') {
             return response()->json(['error' => 'Acceso denegado. Solo administradores.'], 403);
@@ -86,16 +89,10 @@ Route::middleware('auth')->group(function () {
         return response()->json(LogAuditoria::orderBy('id', 'desc')->limit(100)->get());
     });
     
-    // Descarga de Base de Datos
     Route::get('/api/backup', function () {
         if (Auth::user()->rol !== 'Administrador') {
             abort(403, 'Acceso denegado. Solo administradores pueden descargar la base de datos.');
         }
         return response()->download(database_path('database.sqlite'), 'ocris_backup_' . date('Y-m-d') . '.sqlite');
     });
-    Route::get('/limpiar-cache', function() {
-    \Illuminate\Support\Facades\Artisan::call('optimize:clear');
-    return "¡La caché ha sido limpiada con éxito!";
-});
-
 });
