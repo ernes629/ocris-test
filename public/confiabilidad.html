@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OCRIS - Confiabilidad RCM / TPM</title>
+    
+    <script src="librerias/chart.js"></script>
+    <script src="librerias/xlsx.full.min.js"></script>
+
+    <style>
+        :root {
+            --bg-body: #f1f5f9; --bg-panel: #ffffff; --text-main: #1e293b; --text-muted: #64748b;
+            --border-color: #cbd5e1; --primary: #0284c7; --success: #16a34a; --danger: #dc2626;
+            --warning: #f59e0b; --dark-btn: #475569;
+        }
+        [data-tema="oscuro"] {
+            --bg-body: #0f172a; --bg-panel: #1e293b; --text-main: #f8fafc; --text-muted: #94a3b8;
+            --border-color: #334155; --primary: #38bdf8; --success: #4ade80; --danger: #ef4444;
+            --warning: #fbbf24; --dark-btn: #64748b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+        body { background-color: var(--bg-body); color: var(--text-main); transition: 0.2s; font-size: 15px; }
+        
+        header { background: var(--primary); color: white; padding: 25px 15px; text-align: center; }
+        header h1 { font-size: 30px; margin-bottom: 6px; font-weight: 800; letter-spacing: 1px; }
+        header p { font-size: 14px; opacity: 0.9; max-width: 600px; margin: 0 auto; font-weight: bold; }
+        [data-tema="oscuro"] header { color: #0f172a; }
+        [data-tema="oscuro"] header h1, [data-tema="oscuro"] header p { color: #0f172a !important; }
+        
+        .container { max-width: 1450px; margin: 20px auto; padding: 0 15px; }
+        .panel { background: var(--bg-panel); padding: 22px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 25px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08); }
+        h2 { color: var(--text-main); margin-bottom: 15px; font-weight: 800; font-size: 20px; }
+
+        /* Tarjetas Semáforo */
+        .resumen-rcm { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 25px; }
+        @media (min-width: 900px) { .resumen-rcm { grid-template-columns: repeat(6, 1fr); } }
+        .tarjeta-rcm { background: var(--bg-panel); padding: 18px 12px; border-radius: 10px; border: 1px solid var(--border-color); text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .tarjeta-rcm h3 { font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; font-weight: 800; letter-spacing: 0.5px; }
+        .tarjeta-rcm .numero { font-size: 28px; font-weight: 900; }
+        .card-critica { border-top: 5px solid var(--danger); }
+        .card-critica .numero { color: var(--danger); }
+        .card-alerta { border-top: 5px solid var(--warning); }
+        .card-alerta .numero { color: var(--warning); }
+        .card-normal { border-top: 5px solid var(--success); }
+        .card-normal .numero { color: var(--success); }
+        .card-motor { border-top: 5px solid #8b5cf6; }
+        .card-motor .numero { color: #8b5cf6; }
+        .card-regulador { border-top: 5px solid #0284c7; }
+        .card-regulador .numero { color: #0284c7; }
+
+        /* Controles de filtro y Excel */
+        .filtros-rcm { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 15px; align-items: center; justify-content: space-between; }
+        .inputs-filtro { display: flex; flex-wrap: wrap; gap: 10px; flex: 1; }
+        .inputs-filtro input, .inputs-filtro select { padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-body); color: var(--text-main); font-size: 14px; outline: none; }
+        .btn-excel-rcm { background: var(--success); color: white; border: none; padding: 12px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 13px; transition: 0.2s; }
+        .btn-excel-rcm:active { transform: scale(0.98); }
+
+        /* Tablas */
+        .tabla-contenedor { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border-color); margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; background: var(--bg-panel); font-size: 13px; }
+        th { background: var(--bg-body) !important; color: var(--text-main) !important; padding: 12px 10px; text-align: left; text-transform: uppercase; border-bottom: 2px solid var(--border-color); font-size: 12px; }
+        td { padding: 12px 10px; border-bottom: 1px solid var(--border-color) !important; vertical-align: middle; }
+        tr:hover { background: rgba(128,128,128,0.03); }
+
+        /* Badges */
+        .badge { display: inline-block; padding: 4px 8px; border-radius: 15px; font-weight: bold; font-size: 11px; }
+        .badge-critica { background: rgba(220, 38, 38, 0.12); color: var(--danger); border: 1px solid var(--danger); }
+        .badge-alerta { background: rgba(245, 158, 11, 0.15); color: #d97706; border: 1px solid var(--warning); }
+        .badge-normal { background: rgba(22, 163, 74, 0.12); color: var(--success); border: 1px solid var(--success); }
+
+        /* Caja de alertas */
+        .alerta-item { padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 5px solid; font-size: 13px; }
+        .alerta-motor { background: rgba(139, 92, 246, 0.08); border-color: #8b5cf6; }
+        .alerta-reg { background: rgba(2, 132, 199, 0.08); border-color: var(--primary); }
+    </style>
+</head>
+<body>
+<header>
+    <h1>OCRIS - Confiabilidad RCM / TPM</h1>
+    <p>Mantenimiento Basado en Condición de Activos de Media Tensión (GOSSR)</p>
+</header>
+
+<main class="container">
+    
+    <!-- TARJETAS SEMÁFORO -->
+    <div class="resumen-rcm">
+        <div class="tarjeta-rcm"><h3>Total Baterías</h3><div class="numero" id="cntTotal">0</div></div>
+        <div class="tarjeta-rcm card-critica"><h3>🔴 Reemplazo Crítico</h3><div class="numero" id="cntCriticas">0</div></div>
+        <div class="tarjeta-rcm card-alerta"><h3>🟡 En Observación</h3><div class="numero" id="cntAlerta">0</div></div>
+        <div class="tarjeta-rcm card-normal"><h3>🟢 En Rango Óptimo</h3><div class="numero" id="cntNormales">0</div></div>
+        <div class="tarjeta-rcm card-motor"><h3>⚠️ Alerta Motor OCRI</h3><div class="numero" id="cntMotores">0</div></div>
+        <div class="tarjeta-rcm card-regulador"><h3>⚡ Reg. Restringidos</h3><div class="numero" id="cntReguladores">0</div></div>
+    </div>
+
+    <!-- SECCIÓN 1: SEMÁFORO DE BATERÍAS Y PLAN DE REEMPLAZO -->
+    <section class="panel">
+        <h2>🔋 Semáforo de Baterías y Salud Eléctrica (RCM)</h2>
+        
+        <div class="filtros-rcm">
+            <div class="inputs-filtro">
+                <input type="text" id="buscarBat" placeholder="🔍 Buscar por placa o ubicación..." oninput="filtrarBaterias()">
+                <select id="filtroEstadoBat" onchange="filtrarBaterias()">
+                    <option value="">Todos los Estados</option>
+                    <option value="CRITICA">🔴 Solo Críticas (Reemplazo Urgente)</option>
+                    <option value="ALERTA">🟡 En Observación (3 a 5 años / Tensión Baja)</option>
+                    <option value="NORMAL">🟢 En Rango Óptimo</option>
+                </select>
+                <select id="filtroBancoBat" onchange="filtrarBaterias()">
+                    <option value="">Todos los Bancos</option>
+                    <option value="24 V">Bancos de 24 V</option>
+                    <option value="12 V">Bancos de 12 V</option>
+                </select>
+            </div>
+            <button class="btn-excel-rcm" onclick="exportarPlanReemplazoExcel()">📥 Exportar Plan de Compras a Excel</button>
+        </div>
+
+        <div class="tabla-contenedor">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Placa</th><th>Equipo</th><th>Ubicación</th><th>Banco</th>
+                        <th>Fecha Batería</th><th>Antigüedad</th><th>Sin Carga</th>
+                        <th>Con Carga</th><th>Caída ΔV</th><th>Estado RCM</th><th>Diagnóstico y Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaBaterias">
+                    <tr><td colspan="11" style="text-align: center;">Analizando datos de condición...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- SECCIÓN 2: MECANISMOS MOTORES OCRI Y REGULADORES -->
+    <div style="display: grid; grid-template-columns: 1fr; gap: 20px;">
+        <section class="panel">
+            <h2>⚙️ Salud del Mecanismo Motor en OCRIS (R > 300 Ω)</h2>
+            <div id="listaMotores">
+                <p style="color: var(--text-muted); font-style: italic;">No se detectan alertas en los circuitos motores.</p>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>⚡ Monitoreo de Reguladores Forzados / Restringidos</h2>
+            <div id="listaReguladores">
+                <p style="color: var(--text-muted); font-style: italic;">No hay reguladores con límites restringidos en el sistema.</p>
+            </div>
+        </section>
+    </div>
+
+    <!-- SECCIÓN 3: TOP 5 EQUIPOS MÁS PROBLEMÁTICOS (TPM) -->
+    <section class="panel">
+        <h2>📊 Ranking Top 5 Equipos con Mayor Frecuencia de Falla (Últimos 12 meses)</h2>
+        <div class="tabla-contenedor">
+            <table>
+                <thead><tr><th>N°</th><th>Placa en Poste</th><th>Total de Fallas (Correctivos / Emergencias)</th><th>Nivel de Prioridad TPM</th></tr></thead>
+                <tbody id="tablaTopFallados"></tbody>
+            </table>
+        </div>
+        <button style="margin-top: 20px; width: 100%; padding: 14px; background: transparent; border: 2px solid var(--border-color); border-radius: 8px; font-weight: bold; cursor: pointer; color: var(--text-main);" onclick="window.location.href='index.html'">🏠 Volver al Inicio</button>
+    </section>
+
+</main>
+
+<script>
+    if(localStorage.getItem('temaOscuro') === 'activo') document.documentElement.setAttribute('data-tema', 'oscuro');
+
+    let datosRcmGlobal = null;
+    let bateriasFiltradas = [];
+
+    async function cargarDiagnosticoRCM() {
+        try {
+            const res = await fetch('/api/rcm/diagnostico');
+            if (!res.ok) throw new Error("Error en servidor");
+            const data = await res.json();
+            if (!data.ok) return;
+
+            datosRcmGlobal = data;
+
+            // 1. Tarjetas Superiores
+            document.getElementById('cntTotal').innerText = data.conteo_baterias.total;
+            document.getElementById('cntCriticas').innerText = data.conteo_baterias.criticas;
+            document.getElementById('cntAlerta').innerText = data.conteo_baterias.alerta;
+            document.getElementById('cntNormales').innerText = data.conteo_baterias.normales;
+            document.getElementById('cntMotores').innerText = data.motores_alerta.length;
+            document.getElementById('cntReguladores').innerText = data.reguladores_alerta.length;
+
+            // 2. Renderizar Motores
+            const contMotores = document.getElementById('listaMotores');
+            if (data.motores_alerta.length > 0) {
+                contMotores.innerHTML = '';
+                data.motores_alerta.forEach(m => {
+                    contMotores.innerHTML += `
+                        <div class="alerta-item alerta-motor">
+                            <b>Poste: ${m.placa}</b> (${m.ubicacion}) | Fecha: ${m.fecha}<br>
+                            Resistencia de Motor: <b style="color:var(--danger);">${m.resistencia}</b> | Tensión de Mando: ${m.tension_mando}<br>
+                            <span style="color:var(--danger); font-weight:bold;">⚠️ ${m.diagnostico}</span>
+                        </div>
+                    `;
+                });
+            }
+
+            // 3. Renderizar Reguladores
+            const contReg = document.getElementById('listaReguladores');
+            if (data.reguladores_alerta.length > 0) {
+                contReg.innerHTML = '';
+                data.reguladores_alerta.forEach(r => {
+                    contReg.innerHTML += `
+                        <div class="alerta-item alerta-reg">
+                            <b>Regulador: ${r.placa}</b> (${r.ubicacion}) | Toma Restringida: <b style="color:var(--primary);">${r.toma_restringida}</b><br>
+                            Entrada: ${r.tension_entrada} | Salida: ${r.tension_salida} | Corriente: ${r.corriente}<br>
+                            <span>ℹ️ ${r.diagnostico}</span>
+                        </div>
+                    `;
+                });
+            }
+
+            // 4. Renderizar Top 5 Problemáticos
+            const tbodyTop = document.getElementById('tablaTopFallados');
+            tbodyTop.innerHTML = '';
+            if (data.top_problematicos.length === 0) {
+                tbodyTop.innerHTML = `<tr><td colspan="4" style="text-align:center;">No se registraron fallas correctivas en los últimos 12 meses.</td></tr>`;
+            } else {
+                data.top_problematicos.forEach((top, i) => {
+                    tbodyTop.innerHTML += `
+                        <tr>
+                            <td><b>#${i + 1}</b></td>
+                            <td><b>${top.estructura}</b></td>
+                            <td><b style="color:var(--danger); font-size:15px;">${top.total_fallas} eventos</b></td>
+                            <td><span class="badge ${i === 0 ? 'badge-critica' : 'badge-alerta'}">${i === 0 ? 'Prioridad Alta - Inspección Integral' : 'Prioridad Media'}</span></td>
+                        </tr>
+                    `;
+                });
+            }
+
+            filtrarBaterias();
+        } catch (e) {
+            document.getElementById('tablaBaterias').innerHTML = `<tr><td colspan="11" style="text-align:center; color:var(--danger);">Error conectando al servidor para diagnóstico RCM.</td></tr>`;
+        }
+    }
+
+    function filtrarBaterias() {
+        if (!datosRcmGlobal) return;
+
+        const txt = document.getElementById('buscarBat').value.toLowerCase().trim();
+        const fEstado = document.getElementById('filtroEstadoBat').value;
+        const fBanco = document.getElementById('filtroBancoBat').value;
+
+        bateriasFiltradas = datosRcmGlobal.baterias.filter(b => {
+            const matchTxt = b.placa.toLowerCase().includes(txt) || b.ubicacion.toLowerCase().includes(txt);
+            const matchEst = fEstado === "" || b.estado === fEstado;
+            const matchBanco = fBanco === "" || b.tipo_banco === fBanco;
+            return matchTxt && matchEst && matchBanco;
+        });
+
+        const tbody = document.getElementById('tablaBaterias');
+        tbody.innerHTML = '';
+
+        if (bateriasFiltradas.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding: 25px;">No se encontraron registros de baterías para este filtro.</td></tr>`;
+            return;
+        }
+
+        bateriasFiltradas.forEach(b => {
+            let badgeClass = 'badge-normal';
+            let estadoTexto = '🟢 ÓPTIMA';
+            if (b.estado === 'CRITICA') {
+                badgeClass = 'badge-critica';
+                estadoTexto = '🔴 CRÍTICA';
+            } else if (b.estado === 'ALERTA') {
+                badgeClass = 'badge-alerta';
+                estadoTexto = '🟡 ALERTA';
+            }
+
+            // Validar de rojo el delta_v según el tipo de banco (12V > 2.0 / 24V > 3.0)
+            let deltaSuperado = false;
+            let vDeltaNum = parseFloat(b.delta_v);
+            if (!isNaN(vDeltaNum)) {
+                if (b.tipo_banco === '24 V' && vDeltaNum > 3.0) deltaSuperado = true;
+                if (b.tipo_banco === '12 V' && vDeltaNum > 2.0) deltaSuperado = true;
+            }
+
+            tbody.innerHTML += `
+                <tr>
+                    <td><b>${b.placa}</b></td>
+                    <td>${b.tipo_equipo}</td>
+                    <td>${b.ubicacion}</td>
+                    <td><b>${b.tipo_banco}</b></td>
+                    <td>${b.fecha_bateria}</td>
+                    <td><b>${b.antiguedad_anos}</b></td>
+                    <td>${b.v_sin_carga}</td>
+                    <td>${b.v_con_carga}</td>
+                    <td style="color:${deltaSuperado ? 'var(--danger); font-weight:bold;' : 'inherit'}">${b.delta_v}</td>
+                    <td><span class="badge ${badgeClass}">${estadoTexto}</span></td>
+                    <td style="font-size: 12px; color: ${b.estado === 'CRITICA' ? 'var(--danger)' : 'var(--text-main)'}; font-weight: ${b.estado === 'CRITICA' ? 'bold' : 'normal'};">${b.diagnostico}</td>
+                </tr>
+            `;
+        });
+    }
+
+    function exportarPlanReemplazoExcel() {
+        if (!datosRcmGlobal || datosRcmGlobal.baterias.length === 0) {
+            alert("No hay datos de baterías para exportar.");
+            return;
+        }
+
+        const dataExcel = bateriasFiltradas.map((b, index) => ({
+            "N°": index + 1,
+            "Placa Poste": b.placa,
+            "Tipo Equipo": b.tipo_equipo,
+            "Ubicación / Sector": b.ubicacion,
+            "Tipo de Banco": b.tipo_banco,
+            "Fecha Rotulada": b.fecha_bateria || 'N/A',
+            "Antigüedad": b.antiguedad_anos,
+            "V Sin Carga": b.v_sin_carga,
+            "V Con Carga": b.v_con_carga,
+            "Caída ΔV": b.delta_v,
+            "Nivel Prioridad RCM": b.estado,
+            "Acción Requerida para Almacén / Cuadrilla": b.diagnostico
+        }));
+
+        const hoja = XLSX.utils.json_to_sheet(dataExcel);
+        const libro = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(libro, hoja, "Plan_Reemplazo_Baterias");
+
+        const fechaHoy = new Date().toISOString().split('T')[0];
+        XLSX.writeFile(libro, `Plan_Compras_Baterias_RCM_${fechaHoy}.xlsx`);
+    }
+
+    cargarDiagnosticoRCM();
+</script>
+</body>
+</html>
