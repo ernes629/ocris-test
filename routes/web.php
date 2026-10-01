@@ -93,5 +93,10 @@ Route::middleware('auth')->group(function () {
         }
         return response()->download(database_path('database.sqlite'), 'ocris_backup_' . date('Y-m-d') . '.sqlite');
     });
+    // RUTA DE EMERGENCIA PARA LIMPIAR LA CACHÉ
+Route::get('/limpiar-cache', function() {
+    \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+    return "¡La caché de Laravel ha sido limpiada con éxito en Render!";
+});
 
 });
